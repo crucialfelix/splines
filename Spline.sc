@@ -5,18 +5,43 @@ AbstractSpline {
 	var <>points,<>order,<>loop,<>spec;
 	
 	*new { |points,order,loop=false,spec|
-		^super.newCopyArgs(points,order?this.defaultOrder,loop,spec)
+		^super.newCopyArgs(points.collect(_.asPoint),order?this.defaultOrder,loop,spec)
 	}
 	storeArgs { ^[points,order,loop,spec] }
 	*defaultOrder { ^2.0 }
 
-	interpolate { arg divisionsPerSegment=128;
+	interpolate { arg divisionsPerSegment=128,withLoop=false;
 		^points.collect(_.asArray)
 			.interpolate(divisionsPerSegment,
 						this.interpolationKey,
-						loop,order)
+						withLoop,order)
 			.collect(_.asPoint);
 	}
+	wrapxInterpolate { arg divisionsPerSegment=128;
+		// odd: last point is far right edge
+		// if first point is at far left edge
+		// then they are at same time
+		// onscreen you expect to be viewing one cycle
+		// not have it varying in wavelength by where last point lies.
+		// maybe that is fine. no other way to vary the wavelength without zooming
+		var first,ps,li,one,two;
+		first = Point(points.last.x + points.first.x,points.first.y);
+		ps = (points ++ [first]).collect(_.asArray)
+			.interpolate(divisionsPerSegment,
+						this.interpolationKey,
+						false,order)
+			.collect(_.asPoint);
+		// chop off after last point
+		// move to pre-first
+		li = ps.lastIndexForWhich(_.x < points.last.x);
+		if(li.notNil,{
+			one = ps.copyToEnd(li).collect({ |p| Point(p.x-points.last.x,p.y) });
+			two = ps.copyRange(0,li-1);
+			ps = one ++ two
+		});
+		^ps
+	}
+	
 	interpolateAlongX { arg divisions,totalTime,fillEnds=true;
 		// return y values where x is divided evenly (eg. steady time increments)
 		// interpolate returns a series of points evenly spaced along the spline path
@@ -24,7 +49,12 @@ AbstractSpline {
 
 		// doesn't do loop correctly yet
 		var ps,step,feed,t=0.0;
-		ps = this.interpolate(divisions / points.size * 4.0); // oversampled		
+		if(loop,{
+			ps = this.wrapxInterpolate(divisions / points.size * 4.0)
+		},{
+			ps = this.interpolate(divisions / points.size * 4.0); // oversampled
+		});
+				
 		if(totalTime.isNil, {
 			totalTime = ps.last.x;
 		});

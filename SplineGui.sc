@@ -37,7 +37,7 @@ BSplineGui : ObjectGui {
 		scale = scalex@scaley;
 		
 		uv.drawFunc_({
-			var ps,p;
+			var ps,p,ips;
 			gridLines.draw;
 			ps = model.points ++ [model.order];
 			//if(lastps != ps,{
@@ -54,7 +54,14 @@ BSplineGui : ObjectGui {
 				Color.blue.set;
 				p = model.points.first;
 				Pen.moveTo( p.x@(br-p.y) );
-				model.interpolate(16).do { arg point,i;
+				// wrong,
+				// this loop display is dependent on how you intend to use the spline
+				if(model.loop,{
+					ips = model.wrapxInterpolate(16)
+				},{
+					ips = model.interpolate(16)
+				});
+				ips.do { arg point,i;
 					var p;
 					p = point * scale;
 					Pen.lineTo(p.x@(br - p.y))
@@ -62,7 +69,7 @@ BSplineGui : ObjectGui {
 				Pen.stroke;
 			//})
 		});
-		uv.focusColor = GUI.skin.foreground;
+		uv.focusColor = GUI.skin.foreground.alpha_(0.4);
 		uv.mouseDownAction = { |uvw, x, y|
 			var distances,p;
 			p = x@(br-y);
@@ -89,13 +96,13 @@ BSplineGui : ObjectGui {
 
 	curveGui { arg layout;
 		orderSpec = [2,8].asSpec;
-		order = SCSlider( layout, 17@200 )
+		order = Slider( layout, 17@200 )
 			.value_( model.order )
 			.action_({
 				model.order = orderSpec.map(order.value);
 				model.changed
 			});
-		order.focusColor = GUI.skin.foreground;
+		order.focusColor = GUI.skin.foreground.alpha_(0.4);
 	}
 
 }
