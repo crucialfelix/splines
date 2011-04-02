@@ -18,7 +18,12 @@ GridLines {
 	init {
 		bounds = bounds ? Rect(0,0,300,200);
 		userView = userView ?? {
-			UserView(Window.new.front,bounds.resizeBy(0,10)).resize_(5).drawFunc_({this.draw});
+			UserView(Window.new.front,bounds.resizeBy(0,10))
+				.resize_(5)
+				.drawFunc_({arg v;
+					this.bounds=v.bounds;
+					this.draw
+				});
 		};
 		spec = spec ?? {ControlSpec(0, 1, 'linear', 0, 0.5, "")};
 		domainSpec = domainSpec ?? {ControlSpec(0, 1, 'linear', 0, 0.5, "")};
