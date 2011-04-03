@@ -4,20 +4,23 @@ SplineGui : ObjectGui {
 	
 	// 2D spline editor
 
-	var spec;
+	var spec,domainSpec;
 	var order,orderSpec,uv,gridLines;
 
 	writeName {}
 	
-	gui { arg parent, bounds, argSpec;
+	gui { arg parent, bounds, argSpec,argDomainSpec;
 		spec = argSpec;
+		domainSpec = argDomainSpec;
 		^super.gui(parent, bounds ?? {Rect(0,0,300,200)})
 	}
 	
 	guiBody { arg layout;
-		var maxx,maxy,miny,scalex,scaley,scale,br,bounds;
-		var range=4,selected;
-		var lastps,mapPoint;
+		var scalex,scaley,scale,br,bounds;
+		var range=7,selected;
+		var lastps,mapPoint,grey;
+		var sp,ds;
+		
 		bounds = layout.innerBounds.insetAll(0,0,20,0);
 		
 		uv = UserView( layout, bounds );//.resize_(5);
@@ -25,21 +28,15 @@ SplineGui : ObjectGui {
 		br = bounds.height;
 		
 		// this can recalc on rezoom
-		maxx = model.xypoints.last.x * 1.25;
-
-		if(spec.isNil,{
-			maxy = model.xypoints.maxValue(_.y) * 1.25;
-			miny = model.xypoints.minValue(_.y); // not sure if 0 is floor, no idea of spec
-		},{
-			maxy = spec.maxval;
-			miny = spec.minval;
-		});
-		gridLines = GridLines(uv,bounds,spec ?? {[miny,maxy].asSpec},ControlSpec(0,maxx,units:"sec"));
+		sp = this.spec;
+		ds = this.domainSpec;
+		gridLines = GridLines(uv,bounds,sp,ds);
 		
-		scalex = bounds.width.asFloat / maxx;
-		scaley = bounds.height.asFloat / maxy; // ignoring miny for now
+		scalex = bounds.width.asFloat / ds.range;
+		scaley = bounds.height.asFloat / sp.range;
 		scale = scalex@scaley;
 		
+		grey = Color.black.alpha_(0.5);
 		mapPoint = { arg p;
 			p = p * scale;
 			Point(p.x,br-p.y)
@@ -48,9 +45,16 @@ SplineGui : ObjectGui {
 
 			gridLines.draw;
 				
-			Color.black.alpha_(0.5).set; 
+			grey.set; 
 			model.xypoints.do { |point,i|
-				Pen.addArc(mapPoint.value(point),range,0,2pi).stroke
+				Pen.addArc(mapPoint.value(point),range,0,2pi);
+				if(i==selected,{
+					Color(0.28358208955224, 0.69296375266525, 1.0).set;
+					Pen.fill;
+					grey.set; 
+				},{
+					Pen.stroke;
+				})
 			};
 			
 			Color.blue.set;
@@ -62,11 +66,19 @@ SplineGui : ObjectGui {
 			Pen.stroke;
 		});
 		uv.focusColor = GUI.skin.foreground.alpha_(0.4);
-		uv.mouseDownAction = { |uvw, x, y|
-			var distances,p;
+		uv.mouseDownAction = { |uvw, x, y,modifiers, buttonNumber, clickCount|
+			var p;
 			p = x@(br-y);
 			selected = model.xypoints.detectIndex({ |pt|
 				(pt * scale).dist(p) <= range
+			});
+			if(selected.notNil,{
+				uv.refresh
+			},{
+				if(clickCount == 2,{
+					model.createPoint(p/scale);
+					uv.refresh;
+				});
 			});
 		};
 			
@@ -75,17 +87,43 @@ SplineGui : ObjectGui {
 			p = x@(br-y);
 			if( selected.notNil ) { 
 				p = p / scale;
+				if(spec.notNil,{
+					p.y = spec.constrain(p.y)
+				});
+				if(domainSpec.notNil,{
+					p.x = spec.constrain(p.x)
+				});					
 				model.points[selected][0] = p.x;
 				model.points[selected][1] = p.y;
 				model.changed;
 			}; 
 		};
+		// key down action
+		// delete selected
+		
 		uv.refresh;
 		if(model.interpolationKey != 'linear',{
 			this.curveGui(layout);
 		});
 	}
-	
+	spec {
+		var miny,maxy;
+		^spec ?? {
+			miny = model.xypoints.minValue(_.y); // not sure if 0 is floor, no idea of spec
+			maxy = model.xypoints.maxValue(_.y) * 1.25;
+			[miny,maxy].asSpec
+		}
+	}
+	domainSpec {
+		var minx,maxx;
+		^domainSpec ?? {
+			minx = 0;
+			maxx = model.xypoints.last.x * 1.25;
+			// assuming time
+			ControlSpec(minx,maxx,units:"sec")
+		}
+	}			
+			
 	update {
 		uv.refresh
 	}
@@ -106,5 +144,12 @@ SplineGui : ObjectGui {
 
 // LoopSplineEditor
 // BezierPathEditor
+// SplineMapperGui
+
+SplineMapperGui : SplineGui {
+	
+	
+}
+
 
 	

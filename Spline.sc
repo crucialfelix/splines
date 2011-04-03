@@ -95,6 +95,46 @@ LinearSpline  { //: AbstractFunction
 	xypoints {
 		^points.collect({ |p| Point(p[0],p[1]) })
 	}
+	createPoint { arg p,i;
+		if(i.isNil,{
+			// non-ideal
+			// should be on a line
+			// close to an interpolation point
+			// and this only works for points
+			p = p.asPoint;
+			i = this.points.minIndex({ arg pt,i;
+				p.dist(pt.asPoint)
+			});
+		});
+		points = points.insert(i,p.asArray);
+	}
+	minMaxVal { arg dim;
+		var maxes,mins,numd;
+		numd = this.numDimensions;
+		maxes = -inf;
+		mins = inf;
+		points.do { arg p;
+			if(p[dim] < mins,{
+				mins = p[dim]
+			});
+			if(p[dim] > maxes,{
+				maxes = p[dim]
+			});
+		};
+		^[mins,maxes]
+	}		
+	normalizeDim { arg dim,min=0.0,max=1.0;
+		// normalize the points
+		// not the result which depends on analyzing the interpolation
+		// squashing the points by that much may or may not work
+		// depending on freakiness of curves
+		var maxes,mins,numd;
+		# mins, maxes = this.minMaxVal(dim);
+		points.do { arg p;
+			p[dim] = p[dim].linlin(mins,maxes,min,max)
+		};
+	}
+
 	
 	
 

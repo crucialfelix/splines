@@ -57,6 +57,8 @@ SplineGen {
 		// the total tangent length along spline can be summed
 		// but only if 2 dimensions
 		// so just crank the speed up until you like it
+		
+		// should be able to do it in a single buffer/BufRd
 		var ps;
 		ps = spline.interpolate(divisions);
 		ps.flop.plot2;
@@ -134,6 +136,38 @@ SplineOsc : SplineGen {
 	}
 
 }
+
+
+SplineMapper {
+	
+	// use 2D spline as a mapping function
+	
+	var <>spline,<>dimension,<>inSpec,<>outSpec;
+	
+	*new { arg spline,dimension=0,inSpec,outSpec;
+		^super.newCopyArgs(spline,dimension,inSpec.asSpec,outSpec.asSpec)
+	}
+	
+	kr { arg x,divisions=512;
+		var b,index,ispec;
+		b = this.makeBuf(divisions,dimension);
+		if(inSpec.warp.isKindOf(LinearWarp).not,{
+			ispec = [0,b.numFrames-1].asSpec;
+			index = ispec.map(inSpec.unmap(x));
+		},{
+			index = x.linlin(inSpec.minval,inSpec.maxval,0,b.numFrames-1)
+		});
+		^BufRd.kr(1,b,index,0,4)
+	}
+	
+	makeBuf { arg divisions=512,dimension=0;
+		var levels;
+		levels = spline.bilinearInterpolate(divisions,dimension,true).clip(outSpec.minval,outSpec.maxval);
+		^LocalBuf.newFrom(levels);
+	}
+
+}
+
 
 		
 	
