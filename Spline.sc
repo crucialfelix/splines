@@ -97,6 +97,12 @@ LinearSpline  : AbstractFunction {
 	createPoint { arg p,i;
 		points = points.insert(i,p.asArray);
 	}
+	deletePoint { arg i;
+		if(points.size > 1,{
+			points.removeAt(i)
+		});
+	}
+	
 	minMaxVal { arg dim;
 		var maxes,mins,numd;
 		numd = this.numDimensions;
@@ -259,9 +265,7 @@ BezierSpline : LinearSpline {
 					var t,pt;
 					t = divisions.reciprocal * di;
 					// choose interpolation
-					pt = this.perform(funcs[cp.size] ? 'toomanypoints',t,p,pnext,cp);
-					//pt = pt + p;
-					//pt = pt * (pnext-p);
+					pt = this.perform(funcs[cp.size] ? \ntic,t,p,pnext,cp);
 					ps = ps.add(pt)
 				};
 			});
@@ -277,11 +281,17 @@ BezierSpline : LinearSpline {
 	cubic {  arg t,p1,p2,cps;
 		^(((1.0-t).cubed)*p1) +   (3*((1.0-t).squared)*t*cps[0]) +    (3*(1.0-t)*t.squared*cps[1]) + (t.cubed*p2)
 	}
-	/*quartic {  arg t,p1,p2,cps;
-		^(((1.0-t).pow(4))*p1) +   (4*((1.0-t).cubed)*t*cps[0]) +    (3*(1.0-t)*t.squared*cps[1]) + (t.cubed*p2)
-	}*/
-	toomanypoints { arg t,p1,p2,cps;
-		Error("Only (0)linear (1)quadratic and (2)cubic control points supported:" + cps).throw
+	ntic { arg t,p1,p2,cps;
+		// gazillionic
+		var sum,n;
+		n = cps.size;
+		sum = (1-t).pow(n) * p1;
+		(n-1..1).do { arg ni,i;
+			var binomialCoef;
+			binomialCoef = n.factorial / (ni.factorial * (n - ni).factorial);
+			sum = sum + (binomialCoef * t.pow(n-ni) * (1-t).pow(ni) * cps[i] )
+		};			
+		^sum	+ (t.pow(n) * p2);
 	}
 	
 	createPoint { arg p,i;
@@ -292,12 +302,19 @@ BezierSpline : LinearSpline {
 	createControlPoint { arg p,pointi;
 		var cps;
 		cps = controlPoints[pointi];
-		if(cps.size < 2, {
-			 controlPoints[pointi] = cps.add(p);
-		});
+		controlPoints[pointi] = cps.add(p);
 		this.changed('points');
 		^[pointi,controlPoints[pointi].size-1]
-	}	
+	}
+	deletePoint { arg i;
+		if(points.size > 1,{
+			super.deletePoint(i);
+			controlPoints.removeAt(i);
+		});
+	}
+	deleteControlPoint { arg pointi,i;
+		controlPoints[pointi].removeAt(i)
+	}
 	guiClass { ^BezierSplineGui }
 }
 

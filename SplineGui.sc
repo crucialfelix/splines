@@ -4,8 +4,8 @@ SplineGui : ObjectGui {
 	
 	// 2D spline editor
 
-	var spec,domainSpec;
-	var order,orderSpec,uv,gridLines;
+	var >spec,>domainSpec;
+	var order,orderSpec,uv,<gridLines;
 	var <>range=5;
 	var selected;
 	var scale,boundsHeight;
@@ -119,6 +119,9 @@ SplineGui : ObjectGui {
 		};
 		// key down action
 		// delete selected
+		uv.keyDownAction = { arg view, char, modifiers, unicode, keycode;
+			this.keyDownAction(view, char, modifiers, unicode, keycode);
+		};
 	}		
 	spec {
 		var miny,maxy;
@@ -192,7 +195,19 @@ SplineGui : ObjectGui {
 		});
 		model.createPoint(p.asArray,i);
 		^i
-	}	
+	}
+	keyDownAction { arg view, char, modifiers, unicode, keycode;
+		var handled = false;
+		if(unicode == 127,{
+			if(selected.notNil,{
+				model.deletePoint(selected);
+				selected = nil;
+				model.changed;
+				handled = true;
+			})
+		});
+		^handled
+	}					
 
 }
 
@@ -287,13 +302,13 @@ BezierSplineGui : SplineGui {
 			var p;
 			p = x@(boundsHeight-y);
 			p = p / scale;
-			if(spec.notNil,{
-				p.y = spec.constrain(p.y)
-			});
-			if(domainSpec.notNil,{
-				p.x = spec.constrain(p.x)
-			});
 			if( selected.notNil,{
+				if(spec.notNil,{
+					p.y = spec.constrain(p.y)
+				});
+				if(domainSpec.notNil,{
+					p.x = spec.constrain(p.x)
+				});
 				model.points[selected][0] = p.x;
 				model.points[selected][1] = p.y;
 				model.changed;
@@ -305,10 +320,9 @@ BezierSplineGui : SplineGui {
 				});
 			}); 
 		};
-		// key down action
-			// delete selected
-			// move by arrows
-			// select many, move together
+		uv.keyDownAction = { arg view, char, modifiers, unicode, keycode;
+			this.keyDownAction(view, char, modifiers, unicode, keycode);
+		};		
 	}
 	
 	createControlPoint { arg p;
@@ -321,7 +335,20 @@ BezierSplineGui : SplineGui {
 		model.createControlPoint(p.asArray,s);
 		^[s,model.controlPoints[s].size-1]
 	}	
-			
+	keyDownAction { arg view, char, modifiers, unicode, keycode;
+		var handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
+		if(handled.not,{
+			if(unicode == 127,{
+				if(selectedCP.notNil,{
+					model.deleteControlPoint(selectedCP[0],selectedCP[1]);
+					selectedCP = nil;
+					model.changed;
+					handled = true;
+				})
+			});
+		});
+		^handled
+	}	
 }
 	
 
