@@ -4,39 +4,40 @@ SplineGui : ObjectGui {
 	
 	// 2D spline editor
 
-	var >spec,>domainSpec;
+	var <spec,<domainSpec;
 	var order,orderSpec,uv,<gridLines;
 	var <>range=5;
 	var selected;
-	var scale,boundsHeight;
-
-	writeName {}
+	var boundsHeight,boundsWidth;
 	
 	gui { arg parent, bounds, argSpec,argDomainSpec;
-		spec = argSpec;
-		domainSpec = argDomainSpec;
+		if(argSpec.notNil,{
+			spec = argSpec.asSpec
+		},{
+			spec = spec ?? {this.guessSpec};
+		});
+		if(argDomainSpec.notNil,{
+			domainSpec = argDomainSpec.asSpec
+		},{
+			domainSpec = domainSpec ?? {this.guessDomainSpec};
+		});
 		^super.gui(parent, bounds ?? {Rect(0,0,300,200)})
 	}
 	
 	guiBody { arg layout;
-		var scalex,scaley,bounds;
-		var lastps,grey;
-		var sp,ds;
+		var bounds;
+		var grey;
 		
 		bounds = layout.innerBounds.insetAll(0,0,20,0);
 		
 		uv = UserView( layout, bounds );//.resize_(5);
-		uv.background = GUI.skin.background;
-		boundsHeight = bounds.height;
+		this.background = GUI.skin.background;
 		
 		// this can recalc on resize
-		sp = this.spec;
-		ds = this.domainSpec;
-		gridLines = GridLines(uv,bounds,sp,ds);
-		
-		scalex = bounds.width.asFloat / ds.range;
-		scaley = bounds.height.asFloat / sp.range;
-		scale = scalex@scaley;
+		boundsHeight = bounds.height.asFloat;
+		boundsWidth = bounds.width.asFloat;
+
+		gridLines = GridLines(uv,bounds,this.spec,this.domainSpec);
 		
 		grey = Color.black.alpha_(0.5);
 		uv.drawFunc_({
@@ -72,7 +73,7 @@ SplineGui : ObjectGui {
 			};
 			Pen.stroke;
 		});
-		uv.focusColor = GUI.skin.foreground.alpha_(0.4);
+		this.focusColor = GUI.skin.foreground.alpha_(0.4);
 		this.makeMouseActions;
 		
 		this.update;
@@ -80,40 +81,49 @@ SplineGui : ObjectGui {
 			this.curveGui(layout);
 		});
 	}
-	map { arg p;
-		p = p.asPoint * scale;
-		^Point(p.x,boundsHeight-p.y)
+	map { arg p;// splinePointToViewPoint
+		// map a point(as array) in the spec's range to pixel values for the upside userview
+		 p = p.asArray;
+		^Point(
+			domainSpec.unmap(p[0]) * boundsWidth,
+			boundsHeight - (spec.unmap(p[1]) * boundsHeight)
+		)
+	}
+	unmap { arg point;
+		// unmap a view's point to a point (as array) for the spline
+		^[
+			domainSpec.map(point.x / boundsWidth),
+			spec.map((boundsHeight - point.y) / boundsHeight)
+		]
 	}
 	makeMouseActions {
 		uv.mouseDownAction = { |uvw, x, y,modifiers, buttonNumber, clickCount|
 			var p;
-			p = x@(boundsHeight-y);
+			p = x@y;
 			selected = model.xypoints.detectIndex({ |pt|
-				(pt * scale).dist(p) <= range
+				(this.map(pt)).dist(p) <= range
 			});
 			if(selected.notNil,{
 				uv.refresh
 			},{
 				if(clickCount == 2,{
-					selected = this.createPoint(p/scale);
+					selected = this.createPoint(this.unmap(p));
 					uv.refresh;
 				});
 			});
 		};
 			
 		uv.mouseMoveAction = { |uvw, x,y| 
-			var p;
-			p = x@(boundsHeight-y);
+			var spoint;
 			if( selected.notNil ) { 
-				p = p / scale;
+				spoint = this.unmap(x@y);
 				if(spec.notNil,{
-					p.y = spec.constrain(p.y)
+					spoint[1] = spec.constrain(spoint[1])
 				});
 				if(domainSpec.notNil,{
-					p.x = spec.constrain(p.x)
+					spoint[0] = domainSpec.constrain(spoint[0])
 				});					
-				model.points[selected][0] = p.x;
-				model.points[selected][1] = p.y;
+				model.points[selected] = spoint;
 				model.changed;
 			}; 
 		};
@@ -122,33 +132,44 @@ SplineGui : ObjectGui {
 		uv.keyDownAction = { arg view, char, modifiers, unicode, keycode;
 			this.keyDownAction(view, char, modifiers, unicode, keycode);
 		};
-	}		
-	spec {
-		var miny,maxy;
-		^spec ?? {
-			miny = model.xypoints.minValue(_.y); // not sure if 0 is floor, no idea of spec
-			maxy = model.xypoints.maxValue(_.y) * 1.25;
-			[miny,maxy].asSpec
-		}
 	}
-	domainSpec {
+	guessSpec {
+		var miny,maxy;
+		miny = model.xypoints.minValue(_.y); // not sure if 0 is floor, no idea of spec
+		maxy = model.xypoints.maxValue(_.y) * 1.25;
+		^ControlSpec(miny,maxy)
+	}
+	guessDomainSpec {
 		var minx,maxx;
-		^domainSpec ?? {
-			minx = 0;
-			maxx = model.xypoints.last.x * 1.25;
-			// let's assume time
-			ControlSpec(minx,maxx,units:"sec")
-		}
-	}			
-			
+		minx = 0;
+		maxx = model.xypoints.last.x * 1.25;
+		^ControlSpec(minx,maxx)
+	}
+	spec_ { arg sp;
+		spec = sp;
+		gridLines.spec = sp;
+	}
+	domainSpec_ { arg dsp;
+		domainSpec = dsp;
+		gridLines.domainSpec = dsp;
+	}
+	
 	update {
 		uv.refresh
 	}
-
+	background_ { arg c; uv.background = c }
+	focusColor_ { arg c; 
+		uv.focusColor = c;
+		if(order.notNil,{
+			order.focusColor = c
+		})	
+	}
+	writeName {}
+	
 	curveGui { arg layout;
 		orderSpec = [2,8].asSpec;
 		order = Slider( layout, 17@200 )
-			.value_( model.order )
+			.value_( orderSpec.unmap( model.order ) )
 			.action_({
 				model.order = orderSpec.map(order.value);
 				model.changed
@@ -257,11 +278,11 @@ BezierSplineGui : SplineGui {
 		// only on points changed
 		flatpoints = [];
 		model.xypoints.do { arg xy,i;
-			flatpoints = flatpoints.add( [xy * scale,\point,i] )
+			flatpoints = flatpoints.add( [this.map(xy),\point,i] )
 		};
 		model.controlPoints.do { arg cps,cpi;
 			cps.do { arg xy,i;
-				flatpoints = flatpoints.add( [xy.asPoint * scale,\cp, [cpi,i] ] )
+				flatpoints = flatpoints.add( [this.map(xy),\cp, [cpi,i] ] )
 			}
 		};
 		uv.refresh;
@@ -270,9 +291,9 @@ BezierSplineGui : SplineGui {
 	makeMouseActions {
 		uv.mouseDownAction = { |uvw, x, y,modifiers, buttonNumber, clickCount|
 			var p,fp,i;
-			p = (x@(boundsHeight-y));
-			fp = flatpoints.detect({ arg fp;
-				fp[0].dist(p) <= range
+			p = x@y;
+			fp = flatpoints.detect({ arg flatpoint;
+				flatpoint[0].dist(p) <= range
 			});
 			if(fp.notNil,{ 
 				if(fp[1] == 'point',{
@@ -286,11 +307,11 @@ BezierSplineGui : SplineGui {
 			},{
 				if(clickCount == 2,{
 					if(modifiers.isCtrl,{
-						i = this.createControlPoint(p/scale);
+						i = this.createControlPoint(this.unmap(p));
 						selected = nil;
 						selectedCP = i;
 					},{
-						i = this.createPoint(p/scale);
+						i = this.createPoint(this.unmap(p));
 						selected = i;
 						selectedCP = nil;
 					});
@@ -299,23 +320,21 @@ BezierSplineGui : SplineGui {
 		};
 			
 		uv.mouseMoveAction = { |uvw, x,y| 
-			var p;
-			p = x@(boundsHeight-y);
-			p = p / scale;
+			var p,spoint;
+			p = x@y;
 			if( selected.notNil,{
+				spoint = this.unmap(p);
 				if(spec.notNil,{
-					p.y = spec.constrain(p.y)
+					spoint[1] = spec.constrain(spoint[1])
 				});
 				if(domainSpec.notNil,{
-					p.x = spec.constrain(p.x)
+					spoint[0] = domainSpec.constrain(spoint[0])
 				});
-				model.points[selected][0] = p.x;
-				model.points[selected][1] = p.y;
+				model.points[selected] = spoint;
 				model.changed;
 			},{
 				if(selectedCP.notNil,{
-					model.controlPoints[selectedCP[0]][selectedCP[1]][0] = p.x;
-					model.controlPoints[selectedCP[0]][selectedCP[1]][1] = p.y;
+					model.controlPoints[selectedCP[0]][selectedCP[1]] = this.unmap(p);
 					model.changed;
 				});
 			}); 

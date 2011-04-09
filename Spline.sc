@@ -245,7 +245,15 @@ BezierSpline : LinearSpline {
 		nu.controlPoints = controlPoints;
 		^nu
 	}
-	//storeArgs { ^[points,isClosed] }
+	storeArgs { 
+		var ps = Array.newClear(points.size * 2 + 1);
+		points.do({ arg p,i;
+			ps[i * 2] = p;
+			ps[i * 2 + 1] = controlPoints[i];
+		});
+		ps[points.size * 2] = isClosed;
+		^ps
+	}
 	interpolate { arg divisions=128;		
 		// along the spline path
 		// actually gives divisions * numPoints 
@@ -293,7 +301,6 @@ BezierSpline : LinearSpline {
 		};			
 		^sum	+ (t.pow(n) * p2);
 	}
-	
 	createPoint { arg p,i;
 		super.createPoint(p,i);
 		controlPoints = controlPoints.insert(i,[]);
@@ -315,6 +322,15 @@ BezierSpline : LinearSpline {
 	deleteControlPoint { arg pointi,i;
 		controlPoints[pointi].removeAt(i)
 	}
+
+	isLinear {
+		^(points.size == 2 and: {controlPoints[0].size == 0})
+	}
+	// normalizeDim with control points hmm
+	++ { arg thou;
+		^BezierSpline(points ++ thou.points,controlPoints ++ thou.controlPoints,isClosed)
+	}
+
 	guiClass { ^BezierSplineGui }
 }
 

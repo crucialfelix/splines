@@ -141,6 +141,8 @@ SplineOsc : SplineGen {
 SplineMapper {
 	
 	// use 2D spline as a mapping function
+	// spline lies within bounds of inSpec (x) and outSpec (y)
+	// but those specs are required so we know what full width/height is
 	
 	var <>spline,<>dimension,<>inSpec,<>outSpec;
 	
@@ -148,7 +150,7 @@ SplineMapper {
 		^super.newCopyArgs(spline,dimension,inSpec.asSpec,outSpec.asSpec)
 	}
 	
-	kr { arg x,divisions=512;
+	kr { arg x,divisions=128,rate=\kr;
 		var b,index,ispec;
 		b = this.makeBuf(divisions,dimension);
 		if(inSpec.warp.isKindOf(LinearWarp).not,{
@@ -157,7 +159,11 @@ SplineMapper {
 		},{
 			index = x.linlin(inSpec.minval,inSpec.maxval,0,b.numFrames-1)
 		});
-		^BufRd.kr(1,b,index,0,4)
+		^BufRd.perform(rate,1,b,index,0,4)
+	}
+	ar { arg x,divisions=128;
+		// Shaper better ?
+		^this.kr(x,divisions,\ar)
 	}
 	
 	makeBuf { arg divisions=512,dimension=0;
@@ -169,5 +175,4 @@ SplineMapper {
 }
 
 
-		
-	
+
