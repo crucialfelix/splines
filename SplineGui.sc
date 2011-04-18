@@ -46,19 +46,32 @@ SplineGui : ObjectGui {
 				
 			grey.set; 
 			model.xypoints.do { |point,i|
+				var focPoint;
+				focPoint = point;
 				point = this.map(point);
 				Pen.addArc(point,range,0,2pi);
 				if(i==selected,{
 					Color.blue.set;
 					Pen.fill;
-					Color.blue(alpha:0.3).set;
+					// crosshairs
+					//Color(0.91044776119403, 0.0, 0.16306527066162, 0.4).set;
+					Color(0.92537313432836, 1.0, 0.0, 0.41791044776119).set;
 					Pen.moveTo(0@point.y);
 					Pen.lineTo(Point(bounds.width-1,point.y));
 					Pen.moveTo(point.x@0);
 					Pen.lineTo(Point(point.x,bounds.height-1));
 					Pen.stroke;
-					
+
 					grey.set; 
+					// text
+					// better to be able to defer to the GridLines for string repr
+					Pen.use {
+						Pen.translate(point.x,point.y);
+						Pen.rotate(0.5pi);
+						focPoint.x.asFloat.asStringPrec(4).drawAtPoint(Point(-45,0),nil,grey);
+					};
+					focPoint.y.asFloat.asStringPrec(4).drawAtPoint(Point(point.x+15,point.y-15),nil,grey);
+					
 				},{
 					Pen.stroke;
 				})
