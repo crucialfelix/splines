@@ -1,7 +1,11 @@
 /*
 	copied from Plot
+	
 	grid lines divide the space evenly without regard to units.
 	for example 5 seconds will get divided into 4 even divisions
+	
+	a better division strategy can be specified explicitly, 
+	one that the spec or application can suggest
 */
 
 GridLines {
@@ -16,9 +20,9 @@ GridLines {
 	}
 	
 	init {
-		bounds = bounds ? Rect(0,0,300,200);
+		bounds = bounds ?? {Rect(0,0,300,200)};
 		userView = userView ?? {
-			UserView(Window.new.front,bounds.resizeBy(0,10))
+			UserView(Window.new.front,bounds)
 				.resize_(5)
 				.drawFunc_({arg v;
 					this.bounds=v.bounds;
@@ -106,26 +110,24 @@ GridLines {
 		Pen.stroke;
 	}
 
-
 	drawOnGridX { |func|
 		var width = bounds.width;
 		var left = bounds.left;
 		var n, gridValues;
-		var xspec = domainSpec;
 		/*if(this.hasSteplikeDisplay) {
 			// special treatment of special case: lines need more space
 			xspec = xspec.copy.maxval_(xspec.maxval * value.size / (value.size - 1))
 		};*/
-		// can calc these only on resise
+		// can calc these only on resize
 		n = (bounds.width / 64).round(2);
-		if(xspec.hasZeroCrossing) { n = n + 1 };
+		if(domainSpec.hasZeroCrossing) { n = n + 1 };
 
-		gridValues = xspec.gridValues(n);
+		gridValues = domainSpec.gridValues(n);
 		if(gridOnY) { gridValues = gridValues.drop(1) };
 		gridValues = gridValues.drop(-1);
 
 		gridValues.do { |val, i|
-			var hpos = left + (xspec.unmap(val) * width);
+			var hpos = left + (domainSpec.unmap(val) * width);
 			func.value(hpos, val, i);
 		};
 	}
@@ -180,8 +182,7 @@ GridLines {
 			Pen.smoothing_(true);
 			Pen.lineDash_(FloatArray[1, 0])
 		};
-	}				
-	
+	}
 }
 
 
