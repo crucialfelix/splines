@@ -11,7 +11,7 @@ LinearSpline  : AbstractFunction {
 	simplifyStoreArgs { |args| ^args }
 	
 	value { arg u;
-		^points.intAt(u)
+		^points.intAt(u,this.interpolationKey,isClosed) // wslib
 	}
 	numDimensions {
 		^points.first.size
@@ -19,6 +19,7 @@ LinearSpline  : AbstractFunction {
 	interpolate { arg divisions=128;
 		// along the spline path
 		// actually gives divisions * numPoints 
+		// wslib
 		^points.interpolate(divisions,this.interpolationKey,isClosed,this.extraArgs)
 		// need to change to use this.value
 	}
@@ -290,7 +291,7 @@ BezierSpline : LinearSpline {
 		^(((1.0-t).cubed)*p1) +   (3*((1.0-t).squared)*t*cps[0]) +    (3*(1.0-t)*t.squared*cps[1]) + (t.cubed*p2)
 	}
 	ntic { arg t,p1,p2,cps;
-		// gazillionic
+		// anything greater than cubic .. gazillionic
 		var sum,n;
 		n = cps.size;
 		sum = (1-t).pow(n) * p1;
