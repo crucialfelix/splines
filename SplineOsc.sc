@@ -1,10 +1,8 @@
 
-
-	//	asLocalBuf
+	// methods to add:
 	//	asBuffer
 	//	sendToBuffer
 	//	polarKr
-	//	xyKr
 	//	readXYKr
 
 SplineGen {
@@ -13,6 +11,9 @@ SplineGen {
 	
 	*new { arg spline,dimension=0,loop=false;
 		^super.newCopyArgs(spline,dimension,loop)
+	}
+	storeArgs {
+		^[spline,dimension,loop]
 	}
 	duration {
 		// or total loop time
@@ -29,8 +30,7 @@ SplineGen {
 		var b,index;
 		b = this.asLocalBuf(divisions);
 		if(loop,{	
-		index = VarSaw.kr(this.duration.reciprocal * timeScale,width:1).range(0,divisions-1)
-			
+			index = VarSaw.kr(this.duration.reciprocal * timeScale,width:1).range(0,divisions-1)
 		},{
 			index = Line.kr(0.0,divisions-1,this.duration * timeScale,doneAction:doneAction);
 		});
@@ -109,8 +109,10 @@ SplineGen {
 	// where more points are allocated when the error/difference between true value and
 	// interpolated value is highest
 	// so fewer total points, more of them where they are needed.
-	// easier to just write a UGen to calculate the splines on the server
-	// but would be unable to do it for other more complex continuous functions
+
+	// but its easier to just write a UGen to calculate the splines on the server in real time
+
+	// would be unable to do it for other more complex continuous functions
 	// but those are probably best written with straight ugen math
 
 
