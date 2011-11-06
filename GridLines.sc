@@ -82,16 +82,17 @@ GridLines {
 
 	drawNumbersX {
 		var top = bounds.top;
-		var base = bounds.bottom;
-		Pen.fillColor = fontColor;
-		this.drawOnGridX { |hpos, val, i|
-			var string = val.asStringPrec(5) ++ domainSpec.units;
-			Pen.font = font;
-			Pen.stringAtPoint(string, hpos @ base);
+		var base = bounds.bottom - 10;
+		if(base > top,{
+			Pen.fillColor = fontColor;
+			this.drawOnGridX { |hpos, val, i|
+				var string = val.asStringPrec(5) ++ domainSpec.units;
+				Pen.font = font;
+				Pen.stringAtPoint(string, hpos @ base );
+				Pen.stroke;
+			};
 			Pen.stroke;
-		};
-		Pen.stroke;
-
+		})
 	}
 
 	drawNumbersY {
