@@ -11,20 +11,25 @@ LinearSpline  : AbstractFunction {
 	simplifyStoreArgs { |args| ^args }
 	
 	value { arg u;
-		^points.intAt(u,this.interpolationKey,isClosed) // wslib
-	}
-	numDimensions {
-		^points.first.size
+		var args,i,ii;
+		i = u.floor;
+		ii = u.frac;
+		^if(isClosed,{
+			points.wrapAt(i).blend( points.wrapAt(i+1), ii )
+		},{
+			points.clipAt(i).blend( points.clipAt(i+1), ii )
+		});
 	}
 	interpolate { arg divisions=128;
 		// along the spline path
 		// actually gives divisions * numPoints 
-		// wslib
-		^points.interpolate(divisions,this.interpolationKey,isClosed,this.extraArgs)
-		// need to change to use this.value
+		var step;
+		step = points.size.asFloat / divisions.asFloat;
+		^Array.fill(divisions,{ arg i; this.value(i * step) })
 	}
-	interpolationKey { ^\linear }
-	extraArgs { ^nil }
+	numDimensions {
+		^points.first.size
+	}
 
 	bilinearInterpolate { arg divisions,domain=0,fillEnds=true;
 		// return y values for evenly spaced intervals along x (eg. steady time increments)
@@ -33,7 +38,8 @@ LinearSpline  : AbstractFunction {
 		// bicubic would be better
 
 		// domain : dimension along which evenly spaced divisions occur
-		// value : the other dimension for which value is sought
+		// value : the next dimension up for which value is sought
+		// ie. domain = 0 [x], value = 1 [y]
 		// any higher dimensions are ignored
 		var ps,step,feed,t=0.0;
 		var value,totalTime;
@@ -41,7 +47,7 @@ LinearSpline  : AbstractFunction {
 		value = 1 - domain;
 		
 		
-		ps = this.interpolate(divisions / points.size * 4.0); // oversampled
+		ps = this.interpolate( (divisions / points.size * 4.0).asInteger ); // oversampled
 		
 		totalTime = ps.last[domain];
 		// TODO
@@ -121,9 +127,9 @@ LinearSpline  : AbstractFunction {
 	}		
 	normalizeDim { arg dim,min=0.0,max=1.0;
 		// normalize the points
-		// not the result which depends on analyzing the interpolation
-		// squashing the points by that much may or may not work
-		// depending on freakiness of curves
+		// not the resulting line
+		// which may go beyond the min/max
+		// because this would depends on curvature
 		var maxes,mins,numd;
 		# mins, maxes = this.minMaxVal(dim);
 		points.do { arg p;
@@ -131,66 +137,17 @@ LinearSpline  : AbstractFunction {
 		};
 	}
 
-	
-	/*
-	normalize { arg ... dimsMax;
-		// normalize the points
-		// not the result which depends on curve
-		var maxes,mins,numd;
-		numd = this.numDimensions;
-		maxes = Array.fill(numd,-inf);
-		mins = Array.fill(numd,inf);
-		points.do { arg p;
-			numd.do { arg di;
-				if(p[di] < mins[di],{
-					mins[di] = p[di]
-				});
-				if(p[di] > maxes[di],{
-					maxes[di] = p[di]
-				});
-			}
-		};
-		scales		
-		(dimsMax ?? {Array.fill(numd,nil)}).do({ arg max,di;
-	}
-	*/		
-
-
-
-
-
-	// move this elsewhere
-	animate { arg target,selector,frameRate=12,undersampling=1,clock=AppClock;
-		//if(selector.isKindOf(Dictionary),{
-		// get current values
-		Routine({
-			var levels,numFrames,t;
-			t = frameRate.reciprocal;
-			numFrames = (this.duration * frameRate).asInteger;
-			levels = this.interpolateAlongX(numFrames);
-			levels.do({ arg y,frame;
-				target.perform(selector,y);
-				t.wait
-			})
-		}).play(clock)
-	}
 
 	//	plot
 	//	skew
 	//	rotate
-	//	moveby
+	//	moveBy
 	//	resizeBy
-	//	
 	//	++	
 
 	// see ScatterView3d for viewing 3D into a 2D plane
-
-	//Catmull-Rom
-	//http://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull.E2.80.93Rom_spline
-	//http://stackoverflow.com/questions/1251438/catmull-rom-splines-in-python
-	/* For example, most camera path animations generated from discrete key-frames are handled using Catmull–Rom splines. They are popular mainly for being relatively easy to compute, guaranteeing that each key frame position will be hit exactly, and also guaranteeing that the tangents of the generated curve are continuous over multiple segments.*/
-		
 }
+
 
 
 BSpline : LinearSpline {
@@ -201,25 +158,103 @@ BSpline : LinearSpline {
 		^super.newCopyArgs(points.collect(_.asArray),isClosed).order_(order)
 	}
 	storeArgs { ^[points,order,isClosed] }
-	extraArgs { ^order }
-	interpolationKey { ^\bspline }
+
+	// implementation adapted from wslib
+	value {	arg u;
+		var controls,list;
+
+		if( isClosed, {
+			list = points ++ [ points[0] ]
+		},{
+			list = points
+		});
+		controls = this.bSplineIntControls( list );
+		^this.splineIntFunctionArray( list,u, *controls )
+	}
+	interpolate { arg divisions=128;
+		// along the spline path
+		// actually gives divisions * numPoints 
+		var step, controls,list,part1Array;
+
+		step = (points.size.asFloat - 1) / divisions.asFloat;
+
+		if( isClosed, {
+			list = points ++ [ points[0] ]
+		},{
+			list = points
+		});
+		controls = this.bSplineIntControls( list );
+		part1Array = list.collect({ |item,ii|
+				this.splineIntPart1( [item, list.clipAt(ii+1)], controls[0][ii], controls[1][ii] )
+			});
+		
+		^Array.fill(divisions,{ arg i; 
+			var is;
+			is = i * step;
+			this.splineIntPart2( part1Array[is.floor], is.frac );
+		})
+	}
+		
+   	bSplineIntControls { arg list;
+   		var delta;
+   		delta = this.bSplineIntDeltaControls( list );
+   		^[ 
+   			list.collect({ |item, i| item + ( delta[i] ? 0 ); }),
+   			list[1..].collect({ |item, i| item - ( delta[i+1] ? 0 ); })  ++ [ list.first - list.last ] 
+		];
+   	}
+	bSplineIntDeltaControls { arg list;
+		// adapted from http://ibiblio.org/e-notes/Splines/Bint.htm
+		var n, b, a, d;
+
+		n = list.size;
+		#b, a, d = { ( 0 ! n ) } ! 3;
+		 
+		b[1] = -1/order;
+		a[1] = (list.clipAt(2) - list[0])/order;
+		
+		if(n > 2,{
+			( 2 .. (n-1) ).do { |i|
+				b[i] = -1/(b[i-1] + order);
+			   	a[i] = ((list.clipAt(i+1) - list[i-1] - a[i-1]) * -1) * b[i];
+			  	};
+		});
+				  	
+		( (n-2) .. 0 ).do { |i|
+		   if( a[i] != 0 )
+		  	{ d[i] = a[i] + (d[i+1]*b[i]); }
+		  	{ d[i] = (d[i+1]*b[i]); }
+		 };
+	   ^d;
+   	}
+	splineIntFunctionArray { |list,i, x1array, x2array|
+		var part1Array;
+		// x1array and x2array should have the same size as list
+		// this can be cached
+		part1Array = list.collect({ |item,ii|
+				this.splineIntPart1( [item, list.clipAt(ii+1)], x1array[ii], x2array[ii] )
+			});
+		^this.splineIntPart2( part1Array[i.floor], i.frac );
+	}   	
+
+	splineIntPart1 { |list,x1, x2| // used once per step
+		var y1, y2;
+		var c3, c2, c1; // c0;
+		#y1, y2 = list;
+										// c0 = y1; -> use y1 instead
+		c1 = (x1 - y1) * 3 ;				// c1 = (3 * x1) - (3 * y1);
+		c2 = (x2 - (x1*2) + y1) * 3;		// c2 = (3 * x2) - (6 * x1) + (3 * y1);  
+		c3 = (y2 - y1) - ((x2 - x1) * 3); 	// c3 = y2 - (3 * x2) + (3 * x1) - y1; 
+		^[ y1, c1, c2, c3 ]; 
+	}
+		
+	splineIntPart2 { |list,i| // used for every index
+		^((list[3] * i + list[2]) * i + list[1]) * i + list[0]; 
+	}
+		
 	*defaultOrder { ^2.0 }
 }
 
-/*
-Spline : LinearSpline { 
-	
-	// replace this with explicit Bezier series
-	interpolationKey { ^\spline }
-
-}*/
-
-
-HermiteSpline : BSpline {
-	
-	interpolationKey { ^\hermite }
-
-}
 
 
 BezierSpline : LinearSpline {
@@ -336,25 +371,17 @@ BezierSpline : LinearSpline {
 }
 
 
-
 /*
-multi
+HermiteSpline : BSpline {
+	
+	interpolationKey { ^\hermite }
 
-Path(
-	t, spline,
-	t, spline
-)
-purpose is to put splines, elastics, functions, complex point driven splines, fade outs all into one object.
-and move them around in time without having to change their internal x
-
-space between is always some spline
-by default a bezier with no controls (linear)
-
-
-LoopedSplineEditor	
-	by gui by default if loop is set
-
-
+}
 */
 
+	//Catmull-Rom
+	//http://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull.E2.80.93Rom_spline
+	//http://stackoverflow.com/questions/1251438/catmull-rom-splines-in-python
+	/* For example, most camera path animations generated from discrete key-frames are handled using Catmull–Rom splines. They are popular mainly for being relatively easy to compute, guaranteeing that each key frame position will be hit exactly, and also guaranteeing that the tangents of the generated curve are continuous over multiple segments.*/
+		
 
