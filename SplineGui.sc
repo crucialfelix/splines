@@ -5,10 +5,12 @@ SplineGui : ObjectGui {
 	// 2D spline editor
 
 	var <spec,<domainSpec;
+	var <>density=128;
 	var order,orderSpec,uv,<gridLines;
 	var <>range=5;
 	var selected;
 	var boundsHeight,boundsWidth;
+	var fromX,toX,fromXpixels=0,xScale=1.0;
 	
 	gui { arg parent, bounds, argSpec,argDomainSpec;
 		if(argSpec.notNil,{
@@ -24,27 +26,30 @@ SplineGui : ObjectGui {
 		^super.gui(parent, bounds ?? {Rect(0,0,300,200)})
 	}
 	
-	guiBody { arg layout;
+	guiBody { arg layout,b;
 		var bounds;
 		var grey;
+		layout.decorator.margin = 0@0;
+		layout.decorator.gap = 0@0;
+		bounds = layout.decorator.bounds;
 		
-		bounds = layout.innerBounds.insetAll(0,0,20,0);
-		
-		uv = UserView( layout, bounds );//.resize_(5);
+		uv = UserView( layout, bounds );
 		this.background = GUI.skin.background;
 		
 		// this can recalc on resize
 		boundsHeight = bounds.height.asFloat;
 		boundsWidth = bounds.width.asFloat;
 
-		gridLines = GridLines(uv,bounds,this.spec,this.domainSpec);
+		gridLines = GridLines(uv,bounds,this.spec,domainSpec);
+		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
 		grey = Color.black.alpha_(0.5);
 		uv.drawFunc_({
 
 			gridLines.draw;
-				
+						
 			grey.set; 
+			// can cache an array of Pen commands
 			model.xypoints.do { |point,i|
 				var focPoint;
 				focPoint = point;
@@ -54,7 +59,6 @@ SplineGui : ObjectGui {
 					Color.blue.set;
 					Pen.fill;
 					// crosshairs
-					//Color(0.91044776119403, 0.0, 0.16306527066162, 0.4).set;
 					Color(0.92537313432836, 1.0, 0.0, 0.41791044776119).set;
 					Pen.moveTo(0@point.y);
 					Pen.lineTo(Point(bounds.width-1,point.y));
@@ -81,31 +85,38 @@ SplineGui : ObjectGui {
 			Color.blue.set;
 			Pen.moveTo( this.map( model.points[0]) );
 
-			model.interpolate(32).do { arg point,i;
+			model.interpolate(density).do { arg point,i;
 				Pen.lineTo( this.map(point) )
 			};
 			Pen.stroke;
 		});
-		this.focusColor = GUI.skin.foreground.alpha_(0.4);
+		this.focusColor = GUI.skin.focusColor ?? {GUI.skin.foreground.alpha_(0.4)};
 		this.makeMouseActions;
 		
 		this.update;
-		if(model.interpolationKey != 'linear',{
+		if(model.class !== LinearSpline,{
 			this.curveGui(layout);
 		});
 	}
-	map { arg p;// splinePointToViewPoint
-		// map a point(as array) in the spec's range to pixel values for the upside userview
+	map { arg p;
+		// map a spline point to pixel point
+		// for the upside down userview
 		 p = p.asArray;
 		^Point(
-			domainSpec.unmap(p[0]) * boundsWidth,
+			domainSpec.unmap(p[0]) * boundsWidth - fromXpixels * xScale,
 			boundsHeight - (spec.unmap(p[1]) * boundsHeight)
 		)
 	}
+	rawMapX { arg x;
+		// non-zoomed map: spline x to pixel x
+		^domainSpec.unmap(x) * boundsWidth
+	}
 	unmap { arg point;
-		// unmap a view's point to a point (as array) for the spline
+		// unmap a pixel point to a spline point-array
+		var x;
+		x = point.x / xScale + fromXpixels;
 		^[
-			domainSpec.map(point.x / boundsWidth),
+			domainSpec.map(x / boundsWidth),
 			spec.map((boundsHeight - point.y) / boundsHeight)
 		]
 	}
@@ -164,9 +175,24 @@ SplineGui : ObjectGui {
 	}
 	domainSpec_ { arg dsp;
 		domainSpec = dsp;
-		gridLines.domainSpec = dsp;
+		//gridLines.domainSpec = dsp;
 	}
-	
+	setZoom { arg argFromX,argToX;
+		var toXpixels;
+		fromX = argFromX.asFloat;
+		toX = argToX.asFloat;
+		this.domainSpec = ControlSpec(domainSpec.minval,max(toX,domainSpec.maxval));
+		gridLines.domainSpec = ControlSpec(fromX,toX);
+		if(boundsWidth.notNil,{
+			fromXpixels = this.rawMapX(fromX);
+			toXpixels = this.rawMapX(toX);
+			xScale = boundsWidth / (toXpixels - fromXpixels);
+			if(xScale == inf,{
+				xScale = 1.0
+			});
+		});
+	}
+		
 	update {
 		uv.refresh
 	}
@@ -241,13 +267,11 @@ SplineGui : ObjectGui {
 			})
 		});
 		^handled
-	}					
-
+	}
 }
 
 
 // LoopSplineEditor
-// BezierPathEditor
 // SplineMapperGui
 
 SplineMapperGui : SplineGui {
@@ -298,7 +322,9 @@ BezierSplineGui : SplineGui {
 				flatpoints = flatpoints.add( [this.map(xy),\cp, [cpi,i] ] )
 			}
 		};
-		uv.refresh;
+		{
+			uv.refresh;
+		}.defer
 	}
 
 	makeMouseActions {
@@ -335,19 +361,19 @@ BezierSplineGui : SplineGui {
 		uv.mouseMoveAction = { |uvw, x,y| 
 			var p,spoint;
 			p = x@y;
+			spoint = this.unmap(p);
+			if(spec.notNil,{
+				spoint[1] = spec.constrain(spoint[1])
+			});
+			if(domainSpec.notNil,{
+				spoint[0] = domainSpec.constrain(spoint[0])
+			});
 			if( selected.notNil,{
-				spoint = this.unmap(p);
-				if(spec.notNil,{
-					spoint[1] = spec.constrain(spoint[1])
-				});
-				if(domainSpec.notNil,{
-					spoint[0] = domainSpec.constrain(spoint[0])
-				});
 				model.points[selected] = spoint;
 				model.changed;
 			},{
 				if(selectedCP.notNil,{
-					model.controlPoints[selectedCP[0]][selectedCP[1]] = this.unmap(p);
+					model.controlPoints[selectedCP[0]][selectedCP[1]] = spoint;
 					model.changed;
 				});
 			}); 
