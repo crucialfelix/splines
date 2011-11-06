@@ -8,13 +8,15 @@
 <meta name="CocoaVersion" content="949.54">
 <style type="text/css">
 p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px Helvetica}
-p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco; color: #0012af; min-height: 12.0px}
+p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco; color: #00139d; min-height: 12.0px}
 p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
 p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
 p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco; min-height: 12.0px}
 p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco}
 p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Helvetica}
-span.s1 {color: #0012af}
+p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Helvetica; min-height: 17.0px}
+span.s1 {color: #00139d}
+span.s2 {font: 12.0px Arial}
 span.Apple-tab-span {white-space:pre}
 </style>
 </head>
@@ -70,8 +72,11 @@ span.Apple-tab-span {white-space:pre}
 <p class="p5"><br></p>
 <p class="p5"><br></p>
 <p class="p7"><b>Loop</b></p>
-<p class="p6">(</p>
-<p class="p6">// the spline does NOT loop, that would be a loop in 2 dimensional space</p>
+<p class="p8"><b></b><br></p>
+<p class="p6"><span class="s2">Its not the spline that loops (</span>that would be a loop in 2 dimensional space) but the SplineGen that is set to loop. <span class="Apple-converted-space"> </span></p>
+<p class="p8"><b></b><br></p>
+<p class="p6">(<span class="Apple-converted-space"> </span></p>
+<p class="p6">// the spline does NOT loop,<span class="Apple-converted-space"> </span></p>
 <p class="p6">b = <span class="s1">BSpline</span>( Array.fill(16,{ arg i; [ i * 0.25,1.0.rand ] }), 3.0,false );</p>
 <p class="p5"><br></p>
 <p class="p6">b.gui(<span class="s1">nil</span>,1200@300);</p>

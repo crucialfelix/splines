@@ -12,7 +12,7 @@ p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco; min-height: 12.0px}
 p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
 p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
 p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco}
-span.s1 {color: #00139d}
+span.s1 {color: #00128a}
 span.Apple-tab-span {white-space:pre}
 </style>
 </head>
@@ -71,6 +71,20 @@ span.Apple-tab-span {white-space:pre}
 <p class="p2"><br></p>
 <p class="p5">)</p>
 <p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p5">// not working as expected</p>
+<p class="p5">(</p>
+<p class="p5">b = BezierSpline( Point(-1,-1), [], Point(1,1),[],false);</p>
+<p class="p5">b.gui(<span class="s1">nil</span>,500@500,\bipolar,\bipolar);</p>
+<p class="p5">)</p>
+<p class="p5">(</p>
+<p class="p5">{</p>
+<p class="p5"><span class="Apple-tab-span">	</span>x = MouseX.kr(-1,1,\linear);</p>
+<p class="p5"><span class="Apple-tab-span">	</span>y = <span class="s1">SplineMapper</span>(b).kr( <span class="s1">x</span>, 64 );</p>
+<p class="p5"><span class="Apple-tab-span">	</span>//Saw.ar( y.linlin(-1,1, 400,6000) )</p>
+<p class="p5"><span class="Apple-tab-span">	</span>Saw.ar * (y * 0.5 + 1)</p>
+<p class="p5">}.play</p>
+<p class="p3"><span class="Apple-converted-space"> </span>)</p>
 <p class="p2"><br></p>
 <p class="p2"><br></p>
 <p class="p3">make a SplineMapperEditor that limits visibile and points to specs.<span class="Apple-converted-space"> </span></p>
