@@ -217,44 +217,22 @@ SplineGui : ObjectGui {
 	}
 	drawControlPoints {}
 	createPoint { arg p;
-		var pnext,pprev,i;
-
-		// non-ideal
-		// should be close to a line
-		// close to an interpolation point
-		if(selected.notNil,{
-			// one after current selected
-			i = (selected + 1).clip(0,model.points.size-1);
-		},{
-			// guessing. badly
-			p = p.asPoint;
-			i = model.points.minIndex({ arg pt,i;
-				p.dist(pt.asPoint)
-			});
-			pprev = model.points[i-1];
-			pnext = model.points[i+1];
-			if(pprev.notNil,{
-				pprev = pprev.asPoint - p;
-			});
-			if(pnext.notNil,{
-				pnext = pnext.asPoint - p;
-			},{
-			     i = i + 1;	
-			});
-			if(pnext.notNil and: pprev.notNil,{
-				if(pnext.x.sign > pprev.x.sign,{
-					i = i + 1; // after
-				},{
-					if(pnext.x.sign == pprev.x.sign,{
-						if(pnext.y.sign > pprev.y.sign,{
-							i + i + 1;
-						})
-					})
-				})
-			});
-		});
-		model.createPoint(p.asArray,i);
+		var i;
+		i = this.detectPointIndex(p);
+		model.createPoint(p,i);
 		^i
+	}
+	detectPointIndex { arg p;
+		if(model.points.size == 0,{ ^0 });
+		if(p[0] < model.points.first[0],{ ^0 });
+		if(p[0] > model.points.last[0],{ ^model.points.size + 1 });
+		model.points.do { arg j,i;
+			var k;
+			k = model.points.clipAt(i+1);
+			if(p[0].inclusivelyBetween(j[0],k[0]),{
+				^i+1
+			})
+		};
 	}
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
 		var handled = false;
@@ -384,14 +362,28 @@ BezierSplineGui : SplineGui {
 	}
 	
 	createControlPoint { arg p;
-		// select a point then control double click to create a control for it
-		var s;
-		s = selected ?? { if(selectedCP.notNil,{selectedCP[0]},0) };
-		if(s == (model.points.size-1) and: {model.isClosed.not},{
-			s = max(s - 1,0);
+		var i,cps,cpi,return;
+		return = { arg i,ci;
+			model.createControlPoint(p.asArray,i,ci ?? {model.controlPoints[i].size});
+			^[i,model.controlPoints[i].size-1]
+		};
+		i = (this.detectPointIndex(p) - 1).clip(0,model.points.size-1);
+		cps = model.controlPoints[i];
+		if(cps.size == 0,{
+			return.value(i)
 		});
-		model.createControlPoint(p.asArray,s);
-		^[s,model.controlPoints[s].size-1]
+		if(p[0] < cps.first[0],{
+			return.value(i,0)
+		});
+		if(p[0] > cps.last[0],{
+			return.value(i)
+		});
+		cps.do { arg cp,ci;
+			if(p[0].inclusivelyBetween(cp[0],cps.clipAt(ci+1)[0]),{
+				return.value(i,ci + 1);
+			})
+		};
+		return.value(i)
 	}	
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
 		var handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
