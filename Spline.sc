@@ -256,39 +256,35 @@ BSpline : LinearSpline {
 }
 
 
-
 BezierSpline : LinearSpline {
-	
+
 	var <>controlPoints;
-	
+
 	*new { arg ... things;
-		var isClosed,points,controlPoints,nu;
-		if(things.size.odd,{
-			isClosed = things.pop;
-		},{
-			isClosed = false
+		var isClosed = false,points,controlPoints,nu;
+		if(things.last.isKindOf(Boolean),{
+			isClosed = things.pop
 		});
-		points = Array.new(things.size/2);
-		controlPoints = Array.new(things.size/2);
-		things.do { arg p,i;
-			if(i.even,{
-				points.add(p.asArray)
-			},{
-				controlPoints.add(p.collect(_.asArray))
-			});
-		};
+		if(things.size.odd,{ // last controlPoints only needed if isClosed
+			things = things.add( [] )
+		});
+		# points, controlPoints = things.clump(2).flop;
+		points = points.collect(_.asArray);
+		controlPoints = controlPoints.collect({ arg cps; cps.collect(_.asArray) });
 		nu = super.new(points,isClosed);
 		nu.controlPoints = controlPoints;
 		^nu
 	}
-	storeArgs { 
-		var ps = Array.newClear(points.size * 2 + 1);
-		points.do({ arg p,i;
-			ps[i * 2] = p;
-			ps[i * 2 + 1] = controlPoints[i];
+	*fromPoints { arg points=[],controlPoints,isClosed=false;
+		if(controlPoints.isNil,{
+			controlPoints = [] ! points.size-1;
+		},{
+			controlPoints = controlPoints ++ Array.fill(points.size-1 - controlPoints.size,{[]})
 		});
-		ps[points.size * 2] = isClosed;
-		^ps
+		^super.new(points,isClosed).controlPoints_(controlPoints ?? {Array.fill(points.size-1,{[]})})
+	}
+	storeArgs {
+		^[points,controlPoints].flop.flatten(1).add(isClosed)
 	}
 	interpolate { arg divisions=128;		
 		// along the spline path
