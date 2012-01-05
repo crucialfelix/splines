@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title></title>
 <meta name="Generator" content="Cocoa HTML Writer">
-<meta name="CocoaVersion" content="949.54">
+<meta name="CocoaVersion" content="1038.36">
 <style type="text/css">
 p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px Helvetica}
 p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 9.0px Monaco; min-height: 12.0px}
@@ -113,8 +113,6 @@ span.Apple-tab-span {white-space:pre}
 <p class="p5">g = b.gui(<span class="s2">nil</span>,1000@300,ControlSpec(-44,44),ControlSpec(0,8,step:0.25));</p>
 <p class="p5">)</p>
 <p class="p2"><br></p>
-<p class="p5">// to fix:</p>
-<p class="p5">// setting spec/domainSpec after its guied</p>
 <p class="p5">(</p>
 <p class="p6"><span class="s1">b = </span>BezierSpline<span class="s1">(</span></p>
 <p class="p5"><span class="Apple-tab-span">	</span><span class="Apple-tab-span">	</span>0@0,</p>
@@ -126,7 +124,7 @@ span.Apple-tab-span {white-space:pre}
 <p class="p2"><br></p>
 <p class="p5">g = b.gui(<span class="s2">nil</span>,1000@300);</p>
 <p class="p5">g.spec = ControlSpec(0,1,step:0.1);</p>
-<p class="p5">g.domainSpec = ControlSpec(0,8,step:0.25);</p>
+<p class="p5">g.setDomainSpec( ControlSpec(0,8,step:0.25) );</p>
 <p class="p5">)</p>
 <p class="p2"><br></p>
 <p class="p5">(</p>
