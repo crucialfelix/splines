@@ -40,7 +40,11 @@ SplineGui : ObjectGui {
 		boundsHeight = bounds.height.asFloat;
 		boundsWidth = bounds.width.asFloat;
 
-		gridLines = GridLines(uv,bounds,this.spec,domainSpec);
+		if(\Grid.asClass.notNil,{
+			gridLines = DrawGrid(bounds,Grid(domainSpec),Grid(this.spec));
+		},{
+			gridLines = GridLines(uv,bounds,this.spec,domainSpec);
+		});
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
 		grey = Color.black.alpha_(0.5);
@@ -171,17 +175,21 @@ SplineGui : ObjectGui {
 	spec_ { arg sp;
 		spec = sp;
 		gridLines.spec = sp;
+		this.update;
 	}
-	domainSpec_ { arg dsp;
+	setDomainSpec { arg dsp,setGridLines=true;
 		domainSpec = dsp;
-		//gridLines.domainSpec = dsp;
+		if(setGridLines,{
+			gridLines.x.setZoom(dsp.minval,dsp.maxval);
+		});
+		this.update;
 	}
 	setZoom { arg argFromX,argToX;
 		var toXpixels;
 		fromX = argFromX.asFloat;
 		toX = argToX.asFloat;
-		this.domainSpec = ControlSpec(domainSpec.minval,max(toX,domainSpec.maxval));
-		gridLines.domainSpec = ControlSpec(fromX,toX);
+		domainSpec = ControlSpec(domainSpec.minval,max(toX,domainSpec.maxval));
+		gridLines.x.setZoom(fromX,toX);
 		if(boundsWidth.notNil,{
 			fromXpixels = this.rawMapX(fromX);
 			toXpixels = this.rawMapX(toX);
