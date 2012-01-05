@@ -338,11 +338,11 @@ BezierSpline : LinearSpline {
 		super.createPoint(p,i);
 		controlPoints = controlPoints.insert(i,[]);
 		this.changed('points');
-	}		
-	createControlPoint { arg p,pointi;
+	}
+	createControlPoint { arg p,pointi,cpi;
 		var cps;
 		cps = controlPoints[pointi];
-		controlPoints[pointi] = cps.add(p);
+		controlPoints[pointi] = cps.insert(cpi??{cps.size},p.asArray);
 		this.changed('points');
 		^[pointi,controlPoints[pointi].size-1]
 	}
@@ -379,5 +379,5 @@ HermiteSpline : BSpline {
 	//http://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull.E2.80.93Rom_spline
 	//http://stackoverflow.com/questions/1251438/catmull-rom-splines-in-python
 	/* For example, most camera path animations generated from discrete key-frames are handled using Catmull–Rom splines. They are popular mainly for being relatively easy to compute, guaranteeing that each key frame position will be hit exactly, and also guaranteeing that the tangents of the generated curve are continuous over multiple segments.*/
-		
+
 
