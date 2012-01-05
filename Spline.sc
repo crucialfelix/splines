@@ -325,14 +325,14 @@ BezierSpline : LinearSpline {
 	ntic { arg t,p1,p2,cps;
 		// anything greater than cubic .. gazillionic
 		var sum,n;
-		n = cps.size;
+		n = cps.size + 1;
 		sum = (1-t).pow(n) * p1;
 		(n-1..1).do { arg ni,i;
 			var binomialCoef;
 			binomialCoef = n.factorial / (ni.factorial * (n - ni).factorial);
 			sum = sum + (binomialCoef * t.pow(n-ni) * (1-t).pow(ni) * cps[i] )
-		};			
-		^sum	+ (t.pow(n) * p2);
+		};
+		^sum + (t.pow(n) * p2);
 	}
 	createPoint { arg p,i;
 		super.createPoint(p,i);
