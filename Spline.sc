@@ -136,7 +136,9 @@ LinearSpline  { // : AbstractFunction
 	//	rotate
 	//	moveBy
 	//	resizeBy
-	//	++	
+	++ { arg thou;
+		^LinearSpline(points ++ thou.points,isClosed)
+	}
 
 	guiClass {
 		// 2D only
@@ -247,7 +249,10 @@ BSpline : LinearSpline {
 	splineIntPart2 { |list,i| // used for every index
 		^((list[3] * i + list[2]) * i + list[1]) * i + list[0];
 	}
-		
+	++ { arg thou;
+		^BSpline(points ++ thou.points,order,isClosed)
+	}
+
 	*defaultOrder { ^2.0 }
 }
 
