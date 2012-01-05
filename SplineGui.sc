@@ -8,7 +8,7 @@ SplineGui : ObjectGui {
 	var <>density=128;
 	var order,orderSpec,uv,<gridLines;
 	var <>range=5;
-	var selected;
+	var selected,<>onSelect;
 	var boundsHeight,boundsWidth;
 	var fromX,toX,fromXpixels=0,xScale=1.0;
 	
@@ -34,6 +34,7 @@ SplineGui : ObjectGui {
 		bounds = layout.decorator.bounds;
 		
 		uv = UserView( layout, bounds );
+		//uv.resize = 5;
 		this.background = GUI.skin.background;
 		
 		// this can recalc on resize
@@ -72,7 +73,7 @@ SplineGui : ObjectGui {
 
 					Pen.color = grey;
 					// text
-					// better to be able to defer to the GridLines for string repr
+					// better to be able to defer to the Grid for  repr
 					Pen.use {
 						Pen.translate(point.x,point.y);
 						Pen.rotate(0.5pi);
@@ -97,6 +98,7 @@ SplineGui : ObjectGui {
 		this.makeMouseActions;
 		
 		this.update;
+		// make a BSplineGui to separate this out
 		if(model.class !== LinearSpline,{
 			this.curveGui(layout);
 		});
@@ -125,10 +127,15 @@ SplineGui : ObjectGui {
 	}
 	makeMouseActions {
 		uv.mouseDownAction = { |uvw, x, y,modifiers, buttonNumber, clickCount|
-			var p;
+			var p,newSelect;
 			p = x@y;
-			selected = model.xypoints.detectIndex({ |pt|
+			newSelect = model.xypoints.detectIndex({ |pt|
 				(this.map(pt)).dist(p) <= range
+			});
+			if(selected.notNil and: newSelect.notNil and: {modifiers.isShift},{
+				selected = nil
+			},{
+				selected = newSelect
 			});
 			if(selected.notNil,{
 				uv.refresh
@@ -138,6 +145,7 @@ SplineGui : ObjectGui {
 					uv.refresh;
 				});
 			});
+			if(selected.notNil,{ onSelect.value(selected,this) });
 		};
 			
 		uv.mouseMoveAction = { |uvw, x,y| 
@@ -198,6 +206,9 @@ SplineGui : ObjectGui {
 				xScale = 1.0
 			});
 		});
+	}
+	select { arg i;
+		selected = i;
 	}
 		
 	update {
@@ -321,9 +332,17 @@ BezierSplineGui : SplineGui {
 			});
 			if(fp.notNil,{ 
 				if(fp[1] == 'point',{
-					selected = fp[2];
+					if(selected.notNil and: modifiers.isShift,{
+						selected = nil
+					},{
+						selected = fp[2];
+					});
 					selectedCP = nil;
-				},{
+					onSelect.value(selected,this);
+				},{ // control point
+					if(selected.notNil,{
+						onSelect.value(nil,this)
+					});
 					selected = nil;
 					selectedCP = fp[2];
 				});
@@ -339,6 +358,7 @@ BezierSplineGui : SplineGui {
 						selected = i;
 						selectedCP = nil;
 					});
+					onSelect.value(selected,this);
 				});					
 			});
 		};
