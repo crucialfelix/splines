@@ -1,9 +1,5 @@
 
-	// methods to add:
-	//	asBuffer
-	//	sendToBuffer
-	//	polarKr
-	//	readXYKr
+
 
 SplineGen {
 	
@@ -117,26 +113,24 @@ SplineGen {
 
 
 
-// not tested since refactor
-// probably broken
 SplineOsc : SplineGen {
 	
 	// plays a spline in a loop with X as time
 	// ignoring any time reversals
-	
+	// doesnt sound as expected
+		
 	ar { arg freq=440,phase=0,divisions=1024,rate=\ar;
 	    // plays in cycles (full spline) per second
 		var b,index,totalTime=0,levels;
-		totalTime = this.points.last[dimension];
+		totalTime = this.duration;
 		b = this.asLocalBuf;
 		index = VarSaw.perform(rate,(totalTime).reciprocal * freq,phase,1).range(0,levels.size-1)
-		^BufRd.ar(1,b,index,1,4)
+		^BufRd.perform(rate,1,b,index,1,4)
 	}
 	
 	kr { arg freq=440,phase=0,divisions=1024;
 		^this.ar(freq,phase,divisions,\kr)
 	}
-
 }
 
 
@@ -173,7 +167,6 @@ SplineMapper {
 		levels = spline.bilinearInterpolate(divisions,dimension,true).clip(outSpec.minval,outSpec.maxval);
 		^LocalBuf.newFrom(levels);
 	}
-
 }
 
 
