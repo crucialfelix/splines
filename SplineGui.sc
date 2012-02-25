@@ -41,10 +41,12 @@ SplineGui : ObjectGui {
 		boundsHeight = bounds.height.asFloat;
 		boundsWidth = bounds.width.asFloat;
 
-		if(\Grid.asClass.notNil,{
-			gridLines = DrawGrid(bounds,Grid(domainSpec),Grid(this.spec));
+		if(\GridLines.asClass.notNil,{
+			gridLines = DrawGrid(bounds,Grid(domainSpec),GridLines(this.spec));
 		},{
-			gridLines = GridLines(uv,bounds,this.spec,domainSpec);
+			// this is the old implementation
+			// can disappear when this is 3.5 only
+			gridLines = GridLines0(uv,bounds,this.spec,domainSpec);
 		});
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		

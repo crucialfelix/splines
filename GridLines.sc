@@ -8,7 +8,7 @@
 	
 */
 
-GridLines {
+GridLines0 {
 	
 	var <>userView,<>bounds,<>spec,<>domainSpec,<>gridOnX,<>gridOnY;
 	var <>gridColorX, <>gridColorY,<>font,<>fontColor;
