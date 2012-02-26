@@ -42,7 +42,7 @@ SplineGui : ObjectGui {
 		boundsWidth = bounds.width.asFloat;
 
 		if(\GridLines.asClass.notNil,{
-			gridLines = DrawGrid(bounds,Grid(domainSpec),GridLines(this.spec));
+			gridLines = DrawGrid(bounds,GridLines(domainSpec),GridLines(this.spec));
 		},{
 			// this is the old implementation
 			// can disappear when this is 3.5 only
