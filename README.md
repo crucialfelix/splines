@@ -1,10 +1,6 @@
 Splines
 =======
 
-temporary, just putting the work up here
-
-this uses the interpolation methods in Wouter's wslib
-
 BezierSpline
 LinearSpline
 BSpline
@@ -14,6 +10,7 @@ SplineGen
 SplineOsc
 
 guis for editing
+
 
 factored out the GridLines from Common:Plot (plot2)
 this GridLine class can be used in Plot and is also used here as a background to edit the splines.
