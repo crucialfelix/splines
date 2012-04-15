@@ -1,0 +1,7 @@
+(
+	name:		"splines",
+	path:		"splines",
+	summary:	"Splines classes, BSpline, Bezier,  objects and editors",
+	author:		"felix",
+	version:	0.6
+)
