@@ -351,7 +351,7 @@ BezierSplineGui : SplineGui {
 				uv.refresh;
 			},{
 				if(clickCount == 2,{
-					if(modifiers.isCtrl,{
+					if(modifiers.isAlt,{ // isCtrl double click not working on Qt
 						i = this.createControlPoint(this.unmap(p));
 						selected = nil;
 						selectedCP = i;
