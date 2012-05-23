@@ -106,6 +106,9 @@ LinearSpline  { // : AbstractFunction
 			points.removeAt(i)
 		});
 	}
+	setPoint { arg i,di,val;
+		points[i][di] = val;
+	}
 
 	minMaxVal { arg dim;
 		var maxes,mins,numd;
@@ -362,6 +365,9 @@ BezierSpline : LinearSpline {
 	}
 	deleteControlPoint { arg pointi,i;
 		controlPoints[pointi].removeAt(i)
+	}
+	setControlPoint { arg i,di,val;
+		controlPoints[i][di] = val;
 	}
 
 	isLinear {
