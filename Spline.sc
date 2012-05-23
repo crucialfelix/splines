@@ -95,6 +95,9 @@ LinearSpline  { // : AbstractFunction
 	xypoints {
 		^points.collect({ |p| Point(p[0],p[1]) })
 	}
+	add { arg p;
+		points = points.add(p.asArray)
+	}
 	createPoint { arg p,i;
 		points = points.insert(i,p.asArray);
 	}
@@ -155,6 +158,7 @@ BSpline : LinearSpline {
 	*new { |points,order=2.0,isClosed=false|
 		^super.newCopyArgs(points.collect(_.asArray),isClosed).order_(order)
 	}
+
 	storeArgs { ^[points,order,isClosed] }
 
 	value {	arg u;
@@ -333,6 +337,10 @@ BezierSpline : LinearSpline {
 			sum = sum + (binomialCoef * t.pow(n-ni) * (1-t).pow(ni) * cps[i] )
 		};
 		^sum + (t.pow(n) * p2);
+	}
+	add { arg p,cp;
+		super.add(p);
+		controlPoints = controlPoints.add(cp ? []);
 	}
 	createPoint { arg p,i;
 		super.createPoint(p,i);
