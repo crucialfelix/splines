@@ -330,13 +330,19 @@ SplineMapperGui : SplineGui {
 
 BezierSplineGui : SplineGui {
 	
+	var <>controlPointColor;
 	var selectedCP,flatpoints;
-	
+
+	initColors {
+		super.initColors;
+		controlPointColor = Color(0.55223, 0.361065, 0.1);
+	}
 	drawControlPoints {
 		model.controlPoints.do { |cps,cpi|
 			var next;
-			Pen.color = Color(0.55223880597015, 0.36106502462071, 0.20605925595901);			cps.do { arg point,i;
-				Pen.addArc(this.map(point),range,0,2pi);
+			Pen.color = controlPointColor;
+			cps.do { arg point,i;
+				Pen.addArc(this.map(point),pointSize,0,2pi);
 				if(selectedCP == [cpi,i],{
 					Pen.fill;
 				},{
@@ -344,7 +350,7 @@ BezierSplineGui : SplineGui {
 				});
 			};
 			
-			Pen.color = Color(0.55223880597015, 0.36106502462071, 0.20605925595901, 0.5);			Pen.moveTo(this.map(model.points[cpi]));
+			Pen.moveTo(this.map(model.points[cpi]));
 			cps.do { arg point,i;
 				Pen.lineTo(this.map(point));
 			};
