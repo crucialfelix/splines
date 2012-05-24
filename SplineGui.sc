@@ -187,7 +187,7 @@ SplineGui : AbstractSplineGui {
 			if(selected.notNil,{ onSelect.value(selected,this) });
 		};
 			
-		uv.mouseMoveAction = { |uvw, x,y| 
+		uv.mouseMoveAction = { |uvw, x,y, modifiers| 
 			var spoint;
 			if( selected.notNil ) { 
 				spoint = this.unmap(x@y);
@@ -196,7 +196,14 @@ SplineGui : AbstractSplineGui {
 				});
 				if(domainSpec.notNil,{
 					spoint[0] = domainSpec.constrain(spoint[0])
-				});					
+				});
+				if(modifiers.isCtrl,{
+					if(modifiers.isShift,{
+						spoint[0] = model.points[selected][0]
+					},{
+						spoint[1] = model.points[selected][1]
+					})
+				});				
 				model.points[selected] = spoint;
 				model.changed;
 			}; 
@@ -431,7 +438,7 @@ BezierSplineGui : SplineGui {
 			});
 		};
 			
-		uv.mouseMoveAction = { |uvw, x,y| 
+		uv.mouseMoveAction = { |uvw, x,y,modifiers| 
 			var p,spoint;
 			p = x@y;
 			spoint = this.unmap(p);
@@ -441,7 +448,14 @@ BezierSplineGui : SplineGui {
 			if(domainSpec.notNil,{
 				spoint[0] = domainSpec.constrain(spoint[0])
 			});
-			if( selected.notNil,{
+			if(modifiers.isCtrl,{
+				if(modifiers.isShift,{
+					spoint[0] = model.points[selected][0]
+				},{
+					spoint[1] = model.points[selected][1]
+				})
+			});			
+			if(selected.notNil,{					
 				model.points[selected] = spoint;
 				model.changed;
 			},{
