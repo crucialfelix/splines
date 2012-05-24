@@ -3,6 +3,8 @@
 AbstractSplineGui : ObjectGui {
 
 	var uv,<>alpha=1.0;
+	var <>color,<>crossHairsColor,<>textColor;
+	var <>pointSize=3,<>font;
 
 	gui { arg parent,bounds,userView;
 		if(userView.notNil,{
@@ -20,8 +22,16 @@ AbstractSplineGui : ObjectGui {
 	 			}
 			});
 		});
-		uv = this.makeView(parent,bounds,userView);		
+		uv = this.makeView(parent,bounds,userView);
+		this.initColors;	
 		this.guiBody(parent,uv.bounds.moveTo(0,0));
+	}
+	initColors {
+		// Du gamla, Du fria
+		color = Color.blue;
+		crossHairsColor = Color(0.92537313432836, 1.0, 0.0, 0.41791044776119);
+		textColor = Color.black.alpha_(0.5);
+		font = GUI.font.sansSerif(9);
 	}
 	makeView { arg parent,bounds,userView;
 		^userView ?? {
@@ -40,7 +50,6 @@ SplineGui : AbstractSplineGui {
 	var <spec,<domainSpec;
 	var <>density=128;
 	var order,orderSpec,<gridLines;
-	var <>range=5;
 	var selected,<>onSelect;
 	var boundsHeight,boundsWidth;
 	var fromX,toX,fromXpixels=0,xScale=1.0;
@@ -60,7 +69,7 @@ SplineGui : AbstractSplineGui {
 	}
 	
 	guiBody { arg layout,bounds;
-		var grey,pen;
+		var pen;
 
 		// this can recalc on resize
 		boundsHeight = bounds.height.asFloat;
@@ -75,7 +84,6 @@ SplineGui : AbstractSplineGui {
 		});
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
-		grey = Color.black.alpha_(0.5);
 		pen = GUI.pen;
 		uv.drawFunc_({
 			if(uv.bounds != bounds,{
@@ -85,29 +93,30 @@ SplineGui : AbstractSplineGui {
 			pen.use {
 				pen.alpha = alpha;
 				gridLines.opacity = alpha;
+				Pen.font = font;
 				gridLines.draw;
-					
-				Pen.color = grey; 
+
 				// can cache an array of Pen commands
 				model.xypoints.do { |point,i|
 					var focPoint;
 					focPoint = point;
 					point = this.map(point);
-					Pen.addArc(point,range,0,2pi);
+					Pen.addArc(point,pointSize,0,2pi);
 					if(i==selected,{
-						Pen.color = Color.blue;
+						Pen.color = color;
 						Pen.fill;
+						
 						// crosshairs
-						Pen.color = Color(0.92537313432836, 1.0, 0.0, 0.41791044776119);
+						Pen.color = crossHairsColor;
 						Pen.moveTo(0@point.y);
 						Pen.lineTo(Point(bounds.width-1,point.y));
 						Pen.moveTo(point.x@0);
 						Pen.lineTo(Point(point.x,bounds.height-1));
 						Pen.stroke;
 
-						Pen.color = grey;
 						// text
 						// better to be able to defer to the Grid for  repr
+						Pen.color = textColor;
 						Pen.use {
 							Pen.translate(point.x,point.y);
 							Pen.rotate(0.5pi);
@@ -120,7 +129,7 @@ SplineGui : AbstractSplineGui {
 				};
 				this.drawControlPoints();
 				
-				Pen.color = Color.blue;
+				Pen.color = color;
 				Pen.moveTo( this.map( model.points[0]) );
 
 				model.interpolate(density).do { arg point,i;
@@ -165,7 +174,7 @@ SplineGui : AbstractSplineGui {
 			var p,newSelect;
 			p = x@y;
 			newSelect = model.xypoints.detectIndex({ |pt|
-				(this.map(pt)).dist(p) <= range
+				(this.map(pt)).dist(p) <= pointSize
 			});
 			if(selected.notNil and: newSelect.notNil and: {modifiers.isShift},{
 				selected = nil
@@ -370,7 +379,7 @@ BezierSplineGui : SplineGui {
 			var p,fp,i;
 			p = x@y;
 			fp = flatpoints.detect({ arg flatpoint;
-				flatpoint[0].dist(p) <= range
+				flatpoint[0].dist(p) <= pointSize
 			});
 			if(fp.notNil,{ 
 				if(fp[1] == 'point',{
