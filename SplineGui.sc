@@ -2,7 +2,7 @@
 
 AbstractSplineGui : ObjectGui {
 
-	var uv;
+	var uv,<>alpha=1.0;
 
 	gui { arg parent,bounds,userView;
 		if(userView.notNil,{
@@ -60,7 +60,7 @@ SplineGui : AbstractSplineGui {
 	}
 	
 	guiBody { arg layout,bounds;
-		var grey;
+		var grey,pen;
 
 		// this can recalc on resize
 		boundsHeight = bounds.height.asFloat;
@@ -76,54 +76,58 @@ SplineGui : AbstractSplineGui {
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
 		grey = Color.black.alpha_(0.5);
+		pen = GUI.pen;
 		uv.drawFunc_({
 			if(uv.bounds != bounds,{
 				this.didResize;
 				bounds = uv.bounds;
 			});
-			
-			gridLines.draw;
-						
-			Pen.color = grey; 
-			// can cache an array of Pen commands
-			model.xypoints.do { |point,i|
-				var focPoint;
-				focPoint = point;
-				point = this.map(point);
-				Pen.addArc(point,range,0,2pi);
-				if(i==selected,{
-					Pen.color = Color.blue;
-					Pen.fill;
-					// crosshairs
-					Pen.color = Color(0.92537313432836, 1.0, 0.0, 0.41791044776119);
-					Pen.moveTo(0@point.y);
-					Pen.lineTo(Point(bounds.width-1,point.y));
-					Pen.moveTo(point.x@0);
-					Pen.lineTo(Point(point.x,bounds.height-1));
-					Pen.stroke;
+			pen.use {
+				pen.alpha = alpha;
+				gridLines.opacity = alpha;
+				gridLines.draw;
+					
+				Pen.color = grey; 
+				// can cache an array of Pen commands
+				model.xypoints.do { |point,i|
+					var focPoint;
+					focPoint = point;
+					point = this.map(point);
+					Pen.addArc(point,range,0,2pi);
+					if(i==selected,{
+						Pen.color = Color.blue;
+						Pen.fill;
+						// crosshairs
+						Pen.color = Color(0.92537313432836, 1.0, 0.0, 0.41791044776119);
+						Pen.moveTo(0@point.y);
+						Pen.lineTo(Point(bounds.width-1,point.y));
+						Pen.moveTo(point.x@0);
+						Pen.lineTo(Point(point.x,bounds.height-1));
+						Pen.stroke;
 
-					Pen.color = grey;
-					// text
-					// better to be able to defer to the Grid for  repr
-					Pen.use {
-						Pen.translate(point.x,point.y);
-						Pen.rotate(0.5pi);
-						Pen.stringAtPoint(focPoint.x.asFloat.asStringPrec(4),Point(-45,0));
-					};
-					Pen.stringAtPoint( focPoint.y.asFloat.asStringPrec(4), Point(point.x+15,point.y-15) );
-				},{
-					Pen.stroke;
-				})
-			};
-			this.drawControlPoints();
-			
-			Pen.color = Color.blue;
-			Pen.moveTo( this.map( model.points[0]) );
+						Pen.color = grey;
+						// text
+						// better to be able to defer to the Grid for  repr
+						Pen.use {
+							Pen.translate(point.x,point.y);
+							Pen.rotate(0.5pi);
+							Pen.stringAtPoint(focPoint.x.asFloat.asStringPrec(4),Point(-45,0));
+						};
+						Pen.stringAtPoint( focPoint.y.asFloat.asStringPrec(4), Point(point.x+15,point.y-15) );
+					},{
+						Pen.stroke;
+					})
+				};
+				this.drawControlPoints();
+				
+				Pen.color = Color.blue;
+				Pen.moveTo( this.map( model.points[0]) );
 
-			model.interpolate(density).do { arg point,i;
-				Pen.lineTo( this.map(point) )
-			};
-			Pen.stroke;
+				model.interpolate(density).do { arg point,i;
+					Pen.lineTo( this.map(point) )
+				};
+				Pen.stroke;
+			}
 		});
 		this.focusColor = GUI.skin.focusColor ?? {GUI.skin.foreground.alpha_(0.4)};
 		this.makeMouseActions;
