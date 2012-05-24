@@ -115,14 +115,13 @@ SplineGui : AbstractSplineGui {
 						Pen.stroke;
 
 						// text
-						// better to be able to defer to the Grid for  repr
 						Pen.color = textColor;
 						Pen.use {
 							Pen.translate(point.x,point.y);
 							Pen.rotate(0.5pi);
-							Pen.stringAtPoint(focPoint.x.asFloat.asStringPrec(4),Point(-45,0));
+							Pen.stringAtPoint(gridLines.x.grid.formatLabel(focPoint.x,4),Point(-45,0));
 						};
-						Pen.stringAtPoint( focPoint.y.asFloat.asStringPrec(4), Point(point.x+15,point.y-15) );
+						Pen.stringAtPoint( gridLines.y.grid.formatLabel(focPoint.y,4), Point(point.x+15,point.y-15) );
 					},{
 						Pen.stroke;
 					})
