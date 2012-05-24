@@ -26,7 +26,8 @@ AbstractSplineGui : ObjectGui {
 	makeView { arg parent,bounds,userView;
 		^userView ?? {
 			UserView(parent, bounds)
-				.background_(GUI.skin.background);
+				.background_(GUI.skin.background)
+				.resize_(5);
 		};
 	}
 }
@@ -76,7 +77,11 @@ SplineGui : AbstractSplineGui {
 		
 		grey = Color.black.alpha_(0.5);
 		uv.drawFunc_({
-
+			if(uv.bounds != bounds,{
+				this.didResize;
+				bounds = uv.bounds;
+			});
+			
 			gridLines.draw;
 						
 			Pen.color = grey; 
@@ -232,6 +237,13 @@ SplineGui : AbstractSplineGui {
 				xScale = 1.0
 			});
 		});
+	}
+	didResize {
+		var b;
+		b = uv.bounds.moveTo(0,0);
+		gridLines.bounds = b;
+		boundsHeight = b.height;
+		boundsWidth = b.width;
 	}
 	select { arg i;
 		selected = i;
