@@ -148,6 +148,13 @@ LinearSpline  { // : AbstractFunction
 	sliceDimensions { arg dims;
 		^this.class.new(points.slice(nil,dims),isClosed)
 	}
+	spliceDimensions { arg dims,other;
+		other.points.do { arg p,i;
+			dims.do { arg di,ii;
+				points[i][di] = p[ii]
+			}
+		}
+	}
 
 	guiClass {
 		// 2D only
@@ -388,6 +395,14 @@ BezierSpline : LinearSpline {
 		^this.class.fromPoints(points.slice(nil,dims),
 			controlPoints.slice(nil,dims),isClosed)
 	}
+	spliceDimensions { arg dims,other;
+		super.spliceDimensions(dims,other);
+		other.controlPoints.do { arg p,i;
+			dims.do { arg di,ii;
+				controlPoints[i][di] = p[ii]
+			}
+		}
+	}	
 	guiClass { ^BezierSplineGui }
 }
 
