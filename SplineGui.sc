@@ -140,7 +140,7 @@ SplineGui : AbstractSplineGui {
 		this.focusColor = GUI.skin.focusColor ?? {GUI.skin.foreground.alpha_(0.4)};
 		this.makeMouseActions;
 		
-		this.update;
+		this.refresh;
 		// make a BSplineGui to separate this out
 		if(model.class !== LinearSpline,{
 			this.curveGui(layout);
@@ -226,14 +226,14 @@ SplineGui : AbstractSplineGui {
 	spec_ { arg sp;
 		spec = sp;
 		gridLines.spec = sp;
-		this.update;
+		this.refresh;
 	}
 	setDomainSpec { arg dsp,setGridLines=true;
 		domainSpec = dsp;
 		if(setGridLines,{
 			gridLines.x.setZoom(dsp.minval,dsp.maxval);
 		});
-		this.update;
+		this.refresh;
 	}
 	setZoom { arg argFromX,argToX;
 		var toXpixels;
@@ -261,8 +261,11 @@ SplineGui : AbstractSplineGui {
 		selected = i;
 	}
 		
-	update {
+	refresh {
 		uv.refresh
+	}
+	update { // deprec
+		this.refresh
 	}
 	background_ { arg c; uv.background = c }
 	focusColor_ { arg c; 
@@ -357,7 +360,7 @@ BezierSplineGui : SplineGui {
 		};
 	}
 	curveGui {}
-	update {
+	refresh {
 		// only on points changed
 		flatpoints = [];
 		model.xypoints.do { arg xy,i;
