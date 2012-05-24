@@ -143,7 +143,10 @@ LinearSpline  { // : AbstractFunction
 	//	moveBy
 	//	resizeBy
 	++ { arg thou;
-		^LinearSpline(points ++ thou.points,isClosed)
+		^this.class.new(points ++ thou.points,isClosed)
+	}
+	sliceDimensions { arg dims;
+		^this.class.new(points.slice(nil,dims),isClosed)
 	}
 
 	guiClass {
@@ -258,6 +261,9 @@ BSpline : LinearSpline {
 	}
 	++ { arg thou;
 		^BSpline(points ++ thou.points,order,isClosed)
+	}
+	sliceDimensions { arg dims;
+		^this.class.new(points.slice(nil,dims),order,isClosed)
 	}
 
 	*defaultOrder { ^2.0 }
@@ -378,7 +384,10 @@ BezierSpline : LinearSpline {
 	++ { arg thou;
 		^BezierSpline(points ++ thou.points,controlPoints ++ thou.controlPoints,isClosed)
 	}
-
+	sliceDimensions { arg dims;
+		^this.class.fromPoints(points.slice(nil,dims),
+			controlPoints.slice(nil,dims),isClosed)
+	}
 	guiClass { ^BezierSplineGui }
 }
 
