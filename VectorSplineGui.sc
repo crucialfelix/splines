@@ -30,6 +30,7 @@ VectorSplineGui : AbstractSplineGui {
 			sg.color = Color.hsv(di * (model.numDimensions.reciprocal),1,0.5);
 			sg.showGrid = false;
 			sg.alpha = fade;
+			spline.addDependant(this);
 			sg
 		} ! (model.numDimensions - 1);
 		if(splineGuis.size > 4,{ fade = 0.1 });
@@ -56,6 +57,24 @@ VectorSplineGui : AbstractSplineGui {
 			if(sgi != focused, {sg.refresh})
 		};
 		splineGuis[focused].refresh
+	}
+	update { arg spline;
+		if(spline === model,{
+			// update all
+
+		},{
+			splineGuis.do { arg sg,sgi;
+				if(sg.model === spline,{
+					model.spliceDimensions([0,sgi+1],sg.model)
+				})
+			}
+		})
+	}
+	viewDidClose {
+		super.viewDidClose;
+		splineGuis.do { arg sg;
+			sg.model.removeDependant(this)
+		}
 	}
 }
 
