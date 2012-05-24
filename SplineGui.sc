@@ -2,7 +2,7 @@
 
 AbstractSplineGui : ObjectGui {
 
-	var uv,<>alpha=1.0;
+	var uv,pen,<>alpha=1.0;
 	var <>color,<>crossHairsColor,<>textColor;
 	var <>pointSize=3,<>font;
 
@@ -34,6 +34,7 @@ AbstractSplineGui : ObjectGui {
 		font = GUI.font.sansSerif(9);
 	}
 	makeView { arg parent,bounds,userView;
+		pen = GUI.pen;
 		^userView ?? {
 			UserView(parent, bounds)
 				.background_(GUI.skin.background)
@@ -70,7 +71,6 @@ SplineGui : AbstractSplineGui {
 	}
 	
 	guiBody { arg layout,bounds;
-		var pen;
 
 		// this can recalc on resize
 		boundsHeight = bounds.height.asFloat;
@@ -85,7 +85,6 @@ SplineGui : AbstractSplineGui {
 		});
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
-		pen = GUI.pen;
 		uv.drawFunc_({
 			if(uv.bounds != bounds,{
 				this.didResize;
@@ -94,48 +93,48 @@ SplineGui : AbstractSplineGui {
 			pen.use {
 				pen.alpha = alpha;
 				gridLines.opacity = alpha;
-				Pen.font = font;
+				pen.font = font;
 				gridLines.draw;
 
-				// can cache an array of Pen commands
+				// can cache an array of pen commands
 				model.xypoints.do { |point,i|
 					var focPoint;
 					focPoint = point;
 					point = this.map(point);
-					Pen.addArc(point,pointSize,0,2pi);
+					pen.addArc(point,pointSize,0,2pi);
 					if(i==selected,{
-						Pen.color = color;
-						Pen.fill;
+						pen.color = color;
+						pen.fill;
 						
 						// crosshairs
-						Pen.color = crossHairsColor;
-						Pen.moveTo(0@point.y);
-						Pen.lineTo(Point(bounds.width-1,point.y));
-						Pen.moveTo(point.x@0);
-						Pen.lineTo(Point(point.x,bounds.height-1));
-						Pen.stroke;
+						pen.color = crossHairsColor;
+						pen.moveTo(0@point.y);
+						pen.lineTo(Point(bounds.width-1,point.y));
+						pen.moveTo(point.x@0);
+						pen.lineTo(Point(point.x,bounds.height-1));
+						pen.stroke;
 
 						// text
-						Pen.color = textColor;
-						Pen.use {
-							Pen.translate(point.x,point.y);
-							Pen.rotate(0.5pi);
-							Pen.stringAtPoint(gridLines.x.grid.formatLabel(focPoint.x,4),Point(-45,0));
+						pen.color = textColor;
+						pen.use {
+							pen.translate(point.x,point.y);
+							pen.rotate(0.5pi);
+							pen.stringAtPoint(gridLines.x.grid.formatLabel(focPoint.x,4),Point(-45,0));
 						};
-						Pen.stringAtPoint( gridLines.y.grid.formatLabel(focPoint.y,4), Point(point.x+15,point.y-15) );
+						pen.stringAtPoint( gridLines.y.grid.formatLabel(focPoint.y,4), Point(point.x+15,point.y-15) );
 					},{
-						Pen.stroke;
+						pen.stroke;
 					})
 				};
 				this.drawControlPoints();
 				
-				Pen.color = color;
-				Pen.moveTo( this.map( model.points[0]) );
+				pen.color = color;
+				pen.moveTo( this.map( model.points[0]) );
 
 				model.interpolate(density).do { arg point,i;
-					Pen.lineTo( this.map(point) )
+					pen.lineTo( this.map(point) )
 				};
-				Pen.stroke;
+				pen.stroke;
 			}
 		});
 		this.focusColor = GUI.skin.focusColor ?? {GUI.skin.foreground.alpha_(0.4)};
@@ -350,19 +349,19 @@ BezierSplineGui : SplineGui {
 	drawControlPoints {
 		model.controlPoints.do { |cps,cpi|
 			var next;
-			Pen.color = controlPointColor;
+			pen.color = controlPointColor;
 			cps.do { arg point,i;
-				Pen.addArc(this.map(point),pointSize,0,2pi);
+				pen.addArc(this.map(point),pointSize,0,2pi);
 				if(selectedCP == [cpi,i],{
-					Pen.fill;
+					pen.fill;
 				},{
-					Pen.stroke;
+					pen.stroke;
 				});
 			};
 			
-			Pen.moveTo(this.map(model.points[cpi]));
+			pen.moveTo(this.map(model.points[cpi]));
 			cps.do { arg point,i;
-				Pen.lineTo(this.map(point));
+				pen.lineTo(this.map(point));
 			};
 			if(model.isClosed,{
 				next = model.points.wrapAt(cpi+1)
@@ -370,9 +369,9 @@ BezierSplineGui : SplineGui {
 				next = model.points.at(cpi+1)
 			});
 			if(next.notNil,{
-				Pen.lineTo(this.map(next))
+				pen.lineTo(this.map(next))
 			});
-			Pen.stroke;
+			pen.stroke;
 		};
 	}
 	curveGui {}
