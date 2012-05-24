@@ -85,7 +85,8 @@ SplineGui : AbstractSplineGui {
 		});
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
-		uv.drawFunc_({
+		// only if you own it
+		uv.drawFunc = uv.drawFunc.addFunc({
 			if(uv.bounds != bounds,{
 				this.didResize;
 				bounds = uv.bounds;
