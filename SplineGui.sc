@@ -4,7 +4,7 @@ AbstractSplineGui : ObjectGui {
 
 	var uv,pen,<>alpha=1.0;
 	var <>color,<>crossHairsColor,<>textColor;
-	var <>pointSize=3,<>font;
+	var <>pointSize=3,<>font,<>showGrid=true;
 
 	gui { arg parent,bounds,userView;
 		if(userView.notNil,{
@@ -92,9 +92,11 @@ SplineGui : AbstractSplineGui {
 			});
 			pen.use {
 				pen.alpha = alpha;
-				gridLines.opacity = alpha;
 				pen.font = font;
-				gridLines.draw;
+				if(showGrid,{
+					gridLines.opacity = alpha;
+					gridLines.draw;
+				});
 
 				// can cache an array of pen commands
 				model.xypoints.do { |point,i|
