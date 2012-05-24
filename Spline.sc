@@ -261,6 +261,8 @@ BSpline : LinearSpline {
 	}
 
 	*defaultOrder { ^2.0 }
+
+	guiClass { ^BSplineGui }
 }
 
 

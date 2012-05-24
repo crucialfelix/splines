@@ -49,9 +49,10 @@ SplineGui : AbstractSplineGui {
 
 	var <spec,<domainSpec;
 	var <>density=128;
-	var order,orderSpec,<gridLines;
+	var <gridLines;
 	var selected,<>onSelect;
 	var boundsHeight,boundsWidth;
+	// zooming
 	var fromX,toX,fromXpixels=0,xScale=1.0;
 	
 	gui { arg parent, bounds, argSpec,argDomainSpec,userView;
@@ -141,10 +142,6 @@ SplineGui : AbstractSplineGui {
 		this.makeMouseActions;
 		
 		this.refresh;
-		// make a BSplineGui to separate this out
-		if(model.class !== LinearSpline,{
-			this.curveGui(layout);
-		});
 	}
 	map { arg p;
 		// map a spline point to pixel point
@@ -270,22 +267,9 @@ SplineGui : AbstractSplineGui {
 	background_ { arg c; uv.background = c }
 	focusColor_ { arg c; 
 		uv.focusColor = c;
-		if(order.notNil,{
-			order.focusColor = c
-		})	
 	}
 	writeName {}
 	
-	curveGui { arg layout;
-		orderSpec = [2,8].asSpec;
-		order = Slider( layout, 17@200 )
-			.value_( orderSpec.unmap( model.order ) )
-			.action_({
-				model.order = orderSpec.map(order.value);
-				model.changed
-			});
-		order.focusColor = GUI.skin.foreground.alpha_(0.4);
-	}
 	drawControlPoints {}
 	createPoint { arg p;
 		var i;
@@ -320,8 +304,34 @@ SplineGui : AbstractSplineGui {
 }
 
 
+BSplineGui : SplineGui {
+
+	var order,orderSpec;
+
+	guiBody { arg layout,bounds;
+		super.guiBody(layout,bounds);
+		// a bit messy, its sitting on top of userview
+		this.curveGui(layout);
+	}
+	curveGui { arg layout;
+		orderSpec = [2,8].asSpec;
+		order = Slider( layout, 17@200 )
+			.value_( orderSpec.unmap( model.order ) )
+			.action_({
+				model.order = orderSpec.map(order.value);
+				model.changed
+			});
+	}
+	focusColor_ { arg c; 
+		uv.focusColor = c;
+		if(order.notNil,{
+			order.focusColor = c
+		})	
+	}	
+}
+
+
 // LoopSplineEditor
-// SplineMapperGui
 
 SplineMapperGui : SplineGui {
 	
