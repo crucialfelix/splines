@@ -1,18 +1,50 @@
 
 
-SplineGui : ObjectGui {
+AbstractSplineGui : ObjectGui {
+
+	var uv;
+
+	gui { arg parent,bounds,userView;
+		if(userView.notNil,{
+			parent = userView.parent;
+			bounds = bounds ?? {userView.bounds};
+		},{
+			if(parent.isNil,{
+				parent = Window(model.asString,bounds).front;
+				bounds = parent.bounds.moveTo(0,0);
+			},{
+	 			bounds = bounds ?? {
+	 				parent.tryPerform('indentedRemaining') ?? {
+	 					Rect(0,0,400,300)
+	 				}
+	 			}
+			});
+		});
+		uv = this.makeView(parent,bounds,userView);		
+		this.guiBody(parent,uv.bounds.moveTo(0,0));
+	}
+	makeView { arg parent,bounds,userView;
+		^userView ?? {
+			UserView(parent, bounds)
+				.background_(GUI.skin.background);
+		};
+	}
+}
+
+
+SplineGui : AbstractSplineGui {
 	
 	// 2D spline editor
 
 	var <spec,<domainSpec;
 	var <>density=128;
-	var order,orderSpec,uv,<gridLines;
+	var order,orderSpec,<gridLines;
 	var <>range=5;
 	var selected,<>onSelect;
 	var boundsHeight,boundsWidth;
 	var fromX,toX,fromXpixels=0,xScale=1.0;
 	
-	gui { arg parent, bounds, argSpec,argDomainSpec;
+	gui { arg parent, bounds, argSpec,argDomainSpec,userView;
 		if(argSpec.notNil,{
 			spec = argSpec.asSpec
 		},{
@@ -23,20 +55,12 @@ SplineGui : ObjectGui {
 		},{
 			domainSpec = domainSpec ?? {this.guessDomainSpec};
 		});
-		^super.gui(parent, bounds ?? {Rect(0,0,300,200)})
+		^super.gui(parent,bounds,userView)
 	}
 	
-	guiBody { arg layout,b;
-		var bounds;
+	guiBody { arg layout,bounds;
 		var grey;
-		layout.decorator.margin = 0@0;
-		layout.decorator.gap = 0@0;
-		bounds = layout.decorator.bounds;
-		
-		uv = UserView( layout, bounds );
-		//uv.resize = 5;
-		this.background = GUI.skin.background;
-		
+
 		// this can recalc on resize
 		boundsHeight = bounds.height.asFloat;
 		boundsWidth = bounds.width.asFloat;
