@@ -223,9 +223,11 @@ SplineGui : AbstractSplineGui {
 		^ControlSpec(miny,maxy)
 	}
 	guessDomainSpec {
-		var minx,maxx;
-		minx = 0;
-		maxx = model.xypoints.last.x * 1.25;
+		var xs,minx,maxx;
+		xs = model.points.collect(_.first);
+		minx = xs.minItem ? 0.0;
+		if(minx.inclusivelyBetween(0.0,1.0),{ minx = 0.0 });
+		maxx = xs.maxItem * 1.25;
 		^ControlSpec(minx,maxx)
 	}
 	spec_ { arg sp;
