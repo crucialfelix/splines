@@ -36,15 +36,19 @@ VectorSplineGui : AbstractSplineGui {
 		this.focused = focused;
 	}
 	focused_ { arg di;
+		var sg;
 		if(di.inclusivelyBetween(0,splineGuis.size - 1).not,{
 			("Focus index out of range:" + di).error;
 			^this
 		});
-		splineGuis[focused].alpha = fade;
-		splineGuis[focused].showGrid = false;
+		sg = splineGuis[focused];
+		sg.alpha = fade;
+		sg.showGrid = false;
 		focused = di;
-		splineGuis[focused].alpha = 1.0;
-		splineGuis[focused].showGrid = true;
+		sg = splineGuis[focused];
+		sg.alpha = 1.0;
+		sg.showGrid = true;
+		sg.makeMouseActions;
 		this.refresh;
 	}
 	refresh {
