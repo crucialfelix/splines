@@ -354,19 +354,17 @@ BezierSpline : LinearSpline {
 		^sum + (t.pow(n) * p2);
 	}
 	add { arg p,cp;
-		super.add(p);
 		controlPoints = controlPoints.add(cp ? []);
+		super.add(p);
 	}
 	createPoint { arg p,i;
-		super.createPoint(p,i);
 		controlPoints = controlPoints.insert(i,[]);
-		this.changed('points');
+		super.createPoint(p,i);
 	}
 	createControlPoint { arg p,pointi,cpi;
 		var cps;
 		cps = controlPoints[pointi];
 		controlPoints[pointi] = cps.insert(cpi??{cps.size},p.asArray);
-		this.changed('points');
 		^[pointi,controlPoints[pointi].size-1]
 	}
 	deletePoint { arg i;
