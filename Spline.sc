@@ -299,12 +299,9 @@ BezierSpline : LinearSpline {
 		^nu
 	}
 	*fromPoints { arg points=[],controlPoints,isClosed=false;
-		if(controlPoints.isNil,{
-			controlPoints = [] ! points.size-1;
-		},{
-			controlPoints = controlPoints ++ Array.fill(points.size-1 - controlPoints.size,{[]})
-		});
-		^super.new(points,isClosed).controlPoints_(controlPoints ?? {Array.fill(points.size-1,{[]})})
+		//p:   [ [x,y],       [x,y],   [x,y], [x,y] ]
+		//cps: [  [[x,y],[x,y]],  [[x,y]],  []      ]
+		^super.new(points,isClosed).controlPoints_(controlPoints ?? { [] ! points.size-1 })
 	}
 	storeArgs {
 		^[points,controlPoints].flop.flatten(1).add(isClosed)
