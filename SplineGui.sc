@@ -481,7 +481,7 @@ BezierSplineGui : SplineGui {
 			model.createControlPoint(p.asArray,i,ci ?? {model.controlPoints[i].size});
 			^[i,model.controlPoints[i].size-1]
 		};
-		i = (this.detectPointIndex(p) - 1).clip(0,model.points.size-1);
+		i = (this.detectPointIndex(p) - 1).clip(0,model.controlPoints.size-1);
 		cps = model.controlPoints[i];
 		if(cps.size == 0,{
 			return.value(i)
