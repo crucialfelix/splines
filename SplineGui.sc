@@ -218,18 +218,18 @@ SplineGui : AbstractSplineGui {
 		};
 	}
 	guessSpec {
-		var miny,maxy;
-		miny = model.xypoints.minValue(_.y); // not sure if 0 is floor, no idea of spec
-		maxy = model.xypoints.maxValue(_.y) * 1.25;
-		^ControlSpec(miny,maxy)
+		var miny,maxy,sp;
+		miny = model.xypoints.minValue(_.y);
+		maxy = model.xypoints.maxValue(_.y);
+		sp = ControlSpec(miny.floor,maxy.ceil);
+		^sp.grid.looseRange(miny,maxy).asSpec
 	}
 	guessDomainSpec {
-		var xs,minx,maxx;
+		var xs,minx,maxx,sp;
 		xs = model.points.collect(_.first);
 		minx = xs.minItem ? 0.0;
-		if(minx.inclusivelyBetween(0.0,1.0),{ minx = 0.0 });
-		maxx = xs.maxItem * 1.25;
-		^ControlSpec(minx,maxx)
+		maxx = xs.maxItem ? 1.0;
+		^ControlSpec(minx.floor,maxx.ceil).grid.looseRange(minx,maxx).asSpec
 	}
 	spec_ { arg sp;
 		spec = sp;
