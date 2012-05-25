@@ -286,8 +286,10 @@ SplineGui : AbstractSplineGui {
 		var i;
 		i = this.detectPointIndex(p);
 		model.createPoint(p,i);
+		model.changed(\didCreatePoint,i);
 		^i
 	}
+	// deletePoint
 	detectPointIndex { arg p;
 		if(model.points.size == 0,{ ^0 });
 		if(p[0] < model.points.first[0],{ ^0 });
@@ -306,7 +308,7 @@ SplineGui : AbstractSplineGui {
 			if(selected.notNil,{
 				model.deletePoint(selected);
 				selected = nil;
-				model.changed;
+				model.changed('didDeletePoint',selected);
 				handled = true;
 			})
 		});
@@ -478,7 +480,9 @@ BezierSplineGui : SplineGui {
 	createControlPoint { arg p;
 		var i,cps,cpi,return;
 		return = { arg i,ci;
-			model.createControlPoint(p.asArray,i,ci ?? {model.controlPoints[i].size});
+			ci = ci ?? {model.controlPoints[i].size};
+			model.createControlPoint(p.asArray,i,ci);
+			model.changed('didCreateControlPoint',ci);
 			^[i,model.controlPoints[i].size-1]
 		};
 		i = (this.detectPointIndex(p) - 1).clip(0,model.controlPoints.size-1);
@@ -500,13 +504,14 @@ BezierSplineGui : SplineGui {
 		return.value(i)
 	}	
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
-		var handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
+		var cpi,handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
 		if(handled.not,{
 			if(unicode == 8 or: {unicode==127},{
 				if(selectedCP.notNil,{
-					model.deleteControlPoint(selectedCP[0],selectedCP[1]);
+					cpi = selectedCP[1];
+					model.deleteControlPoint(selectedCP[0],cpi);					
 					selectedCP = nil;
-					model.changed;
+					model.changed('didDeleteControlPoint',cpi);
 					handled = true;
 				})
 			});
