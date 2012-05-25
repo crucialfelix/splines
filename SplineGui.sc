@@ -302,7 +302,7 @@ SplineGui : AbstractSplineGui {
 	}
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
 		var handled = false;
-		if(unicode == 127,{
+		if(unicode == 8 or: {unicode==127},{
 			if(selected.notNil,{
 				model.deletePoint(selected);
 				selected = nil;
@@ -502,7 +502,7 @@ BezierSplineGui : SplineGui {
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
 		var handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
 		if(handled.not,{
-			if(unicode == 127,{
+			if(unicode == 8 or: {unicode==127},{
 				if(selectedCP.notNil,{
 					model.deleteControlPoint(selectedCP[0],selectedCP[1]);
 					selectedCP = nil;
