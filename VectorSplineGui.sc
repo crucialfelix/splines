@@ -4,13 +4,13 @@
 	vectorizing data is a common machine learning technique
 	where many parameters are stored as dimensions of a vector.
 
-	a vector-spline is a (time) series of such vectors where the first dimension is interpreted as X and the other dimensions are the data. 
+	a vector-spline is my own Neologism meaning a (time) series of such vectors where the first dimension is interpreted as X and the other dimensions are the data. 
 
-	most commonly X is time, but can also be a series of states or presets.
+	most commonly X is time, but it can also be an ordered series of states or presets.
 
 	the spline can be used to interpolate between those states or to sequence changes between states.  
 
-	and this gui shows each dimension overlaid and allows switching the focused one and editing it.
+	so this gui shows each dimension overlaid and allows switching the focused one and editing it.
 
 	it uses an array of 2D splines
 	each one a pair of X (global time) and that dimension as Y
