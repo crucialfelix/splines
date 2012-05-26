@@ -23,17 +23,7 @@ VectorSplineGui : AbstractSplineGui {
 	var fade=0.25;
 
 	guiBody { arg layout,bounds;
-		splineGuis = { arg di;
-			var spline,sg;
-			spline = model.sliceDimensions([0,di+1]);
-			sg = spline.guiClass.new(spline).gui(userView:uv);
-			sg.color = Color.hsv(di * (model.numDimensions.reciprocal),1,0.5);
-			sg.showGrid = false;
-			sg.alpha = fade;
-			spline.addDependant(this);
-			sg
-		} ! (model.numDimensions - 1);
-		if(splineGuis.size > 4,{ fade = 0.1 });
+		this.makeSplineGuis;
 		this.focused = focused;
 	}
 	focused_ { arg di;
@@ -69,7 +59,37 @@ VectorSplineGui : AbstractSplineGui {
 				})
 			}
 		})
+		// rebuild all
+		splineGuis.do { arg sg;
+			sg.model.removeDependant(this);
+			sg.remove;
+		};
+		{
+			this.makeSplineGuis;
+			uv.refresh;
+			this.focused = focused;
+		}.defer
 	}
+	updateSplineGuis {
+		(model.numDimensions - 1).do { arg di;
+			var spline;
+			spline = model.sliceDimensions([0,di+1]);
+			splineGuis[di].model = spline;
+		};
+	}
+	makeSplineGuis {
+		uv.drawFunc = nil;
+		splineGuis = { arg di;
+			var spline,sg;
+			spline = model.sliceDimensions([0,di+1]);
+			sg = spline.guiClass.new(spline).gui(userView:uv);
+			sg.color = Color.hsv(di * (model.numDimensions.reciprocal),1,0.5);
+			sg.showGrid = false;
+			sg.alpha = fade;
+			spline.addDependant(this);
+			sg
+		} ! (model.numDimensions - 1);
+	}	
 	viewDidClose {
 		super.viewDidClose;
 		splineGuis.do { arg sg;
