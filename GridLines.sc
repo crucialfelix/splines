@@ -4,8 +4,9 @@
 	
 	it is provided here so that SplineGui can have a fallback grid lines 
 	implementation if DrawGrid/Grid is not present
-	which is the case in 3.4 and (at this time) 3.5 before gridlines is merged in
+	which is the case in SC 3.4
 	
+	will be removed
 */
 
 GridLines0 {

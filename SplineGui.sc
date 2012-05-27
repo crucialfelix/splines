@@ -1,18 +1,62 @@
 
 
-SplineGui : ObjectGui {
+AbstractSplineGui : ObjectGui {
+
+	var uv,pen,<>alpha=1.0;
+	var <>color,<>crossHairsColor,<>textColor;
+	var <>pointSize=3,<>font,<>showGrid=true;
+
+	gui { arg parent,bounds,userView;
+		if(userView.notNil,{
+			parent = userView.parent;
+			bounds = bounds ?? {userView.bounds};
+		},{
+			if(parent.isNil,{
+				parent = Window(model.asString,bounds).front;
+				bounds = parent.bounds.moveTo(0,0);
+			},{
+	 			bounds = bounds ?? {
+	 				parent.tryPerform('indentedRemaining') ?? {
+	 					Rect(0,0,400,300)
+	 				}
+	 			}
+			});
+		});
+		uv = this.makeView(parent,bounds,userView);
+		this.initColors;	
+		this.guiBody(parent,uv.bounds.moveTo(0,0));
+	}
+	initColors {
+		// Du gamla, Du fria
+		color = Color.blue;
+		crossHairsColor = Color(0.92537313432836, 1.0, 0.0, 0.41791044776119);
+		textColor = Color.black.alpha_(0.5);
+		font = GUI.font.sansSerif(9);
+	}
+	makeView { arg parent,bounds,userView;
+		pen = GUI.pen;
+		^userView ?? {
+			UserView(parent, bounds)
+				.background_(GUI.skin.background)
+				.resize_(5);
+		};
+	}
+}
+
+
+SplineGui : AbstractSplineGui {
 	
 	// 2D spline editor
 
 	var <spec,<domainSpec;
-	var <>density=128;
-	var order,orderSpec,uv,<gridLines;
-	var <>range=5;
+	var <>density=256;
+	var <gridLines;
 	var selected,<>onSelect;
 	var boundsHeight,boundsWidth;
+	// zooming
 	var fromX,toX,fromXpixels=0,xScale=1.0;
 	
-	gui { arg parent, bounds, argSpec,argDomainSpec;
+	gui { arg parent, bounds, argSpec,argDomainSpec,userView;
 		if(argSpec.notNil,{
 			spec = argSpec.asSpec
 		},{
@@ -23,20 +67,11 @@ SplineGui : ObjectGui {
 		},{
 			domainSpec = domainSpec ?? {this.guessDomainSpec};
 		});
-		^super.gui(parent, bounds ?? {Rect(0,0,300,200)})
+		^super.gui(parent,bounds,userView)
 	}
 	
-	guiBody { arg layout,b;
-		var bounds;
-		var grey;
-		layout.decorator.margin = 0@0;
-		layout.decorator.gap = 0@0;
-		bounds = layout.decorator.bounds;
-		
-		uv = UserView( layout, bounds );
-		//uv.resize = 5;
-		this.background = GUI.skin.background;
-		
+	guiBody { arg layout,bounds;
+
 		// this can recalc on resize
 		boundsHeight = bounds.height.asFloat;
 		boundsWidth = bounds.width.asFloat;
@@ -50,60 +85,65 @@ SplineGui : ObjectGui {
 		});
 		this.setZoom(domainSpec.minval,domainSpec.maxval);
 		
-		grey = Color.black.alpha_(0.5);
-		uv.drawFunc_({
+		// only if you own it
+		uv.drawFunc = uv.drawFunc.addFunc({
+			if(uv.bounds != bounds,{
+				this.didResize;
+				bounds = uv.bounds;
+			});
+			pen.use {
+				pen.alpha = alpha;
+				pen.font = font;
+				if(showGrid,{
+					gridLines.opacity = alpha;
+					gridLines.draw;
+				});
 
-			gridLines.draw;
+				// can cache an array of pen commands
+				model.xypoints.do { |point,i|
+					var focPoint;
+					focPoint = point;
+					point = this.map(point);
+					pen.addArc(point,pointSize,0,2pi);
+					if(i==selected,{
+						pen.color = color;
+						pen.fill;
 						
-			Pen.color = grey; 
-			// can cache an array of Pen commands
-			model.xypoints.do { |point,i|
-				var focPoint;
-				focPoint = point;
-				point = this.map(point);
-				Pen.addArc(point,range,0,2pi);
-				if(i==selected,{
-					Pen.color = Color.blue;
-					Pen.fill;
-					// crosshairs
-					Pen.color = Color(0.92537313432836, 1.0, 0.0, 0.41791044776119);
-					Pen.moveTo(0@point.y);
-					Pen.lineTo(Point(bounds.width-1,point.y));
-					Pen.moveTo(point.x@0);
-					Pen.lineTo(Point(point.x,bounds.height-1));
-					Pen.stroke;
+						// crosshairs
+						pen.color = crossHairsColor;
+						pen.moveTo(0@point.y);
+						pen.lineTo(Point(bounds.width-1,point.y));
+						pen.moveTo(point.x@0);
+						pen.lineTo(Point(point.x,bounds.height-1));
+						pen.stroke;
 
-					Pen.color = grey;
-					// text
-					// better to be able to defer to the Grid for  repr
-					Pen.use {
-						Pen.translate(point.x,point.y);
-						Pen.rotate(0.5pi);
-						Pen.stringAtPoint(focPoint.x.asFloat.asStringPrec(4),Point(-45,0));
-					};
-					Pen.stringAtPoint( focPoint.y.asFloat.asStringPrec(4), Point(point.x+15,point.y-15) );
-				},{
-					Pen.stroke;
-				})
-			};
-			this.drawControlPoints();
-			
-			Pen.color = Color.blue;
-			Pen.moveTo( this.map( model.points[0]) );
+						// text
+						pen.color = textColor;
+						pen.use {
+							pen.translate(point.x,point.y);
+							pen.rotate(0.5pi);
+							pen.stringAtPoint(gridLines.x.grid.formatLabel(focPoint.x,4),Point(-45,0));
+						};
+						pen.stringAtPoint( gridLines.y.grid.formatLabel(focPoint.y,4), Point(point.x+15,point.y-15) );
+					},{
+						pen.stroke;
+					})
+				};
+				this.drawControlPoints();
+				
+				pen.color = color;
+				pen.moveTo( this.map( model.points[0]) );
 
-			model.interpolate(density).do { arg point,i;
-				Pen.lineTo( this.map(point) )
-			};
-			Pen.stroke;
+				model.interpolate(density).do { arg point,i;
+					pen.lineTo( this.map(point) )
+				};
+				pen.stroke;
+			}
 		});
 		this.focusColor = GUI.skin.focusColor ?? {GUI.skin.foreground.alpha_(0.4)};
 		this.makeMouseActions;
 		
-		this.update;
-		// make a BSplineGui to separate this out
-		if(model.class !== LinearSpline,{
-			this.curveGui(layout);
-		});
+		this.refresh;
 	}
 	map { arg p;
 		// map a spline point to pixel point
@@ -132,7 +172,7 @@ SplineGui : ObjectGui {
 			var p,newSelect;
 			p = x@y;
 			newSelect = model.xypoints.detectIndex({ |pt|
-				(this.map(pt)).dist(p) <= range
+				(this.map(pt)).dist(p) <= pointSize
 			});
 			if(selected.notNil and: newSelect.notNil and: {modifiers.isShift},{
 				selected = nil
@@ -144,13 +184,13 @@ SplineGui : ObjectGui {
 			},{
 				if(clickCount == 2,{
 					selected = this.createPoint(this.unmap(p));
-					uv.refresh;
 				});
+				uv.refresh;
 			});
 			if(selected.notNil,{ onSelect.value(selected,this) });
 		};
 			
-		uv.mouseMoveAction = { |uvw, x,y| 
+		uv.mouseMoveAction = { |uvw, x,y, modifiers| 
 			var spoint;
 			if( selected.notNil ) { 
 				spoint = this.unmap(x@y);
@@ -159,9 +199,16 @@ SplineGui : ObjectGui {
 				});
 				if(domainSpec.notNil,{
 					spoint[0] = domainSpec.constrain(spoint[0])
-				});					
+				});
+				if(modifiers.isCtrl,{
+					if(modifiers.isShift,{
+						spoint[0] = model.points[selected][0]
+					},{
+						spoint[1] = model.points[selected][1]
+					})
+				});				
 				model.points[selected] = spoint;
-				model.changed;
+				model.changed('didMovePoint',selected);
 			}; 
 		};
 		// key down action
@@ -171,28 +218,30 @@ SplineGui : ObjectGui {
 		};
 	}
 	guessSpec {
-		var miny,maxy;
-		miny = model.xypoints.minValue(_.y); // not sure if 0 is floor, no idea of spec
-		maxy = model.xypoints.maxValue(_.y) * 1.25;
-		^ControlSpec(miny,maxy)
+		var miny,maxy,sp;
+		miny = model.xypoints.minValue(_.y);
+		maxy = model.xypoints.maxValue(_.y);
+		sp = ControlSpec(miny.floor,maxy.ceil);
+		^sp.grid.looseRange(miny,maxy).asSpec
 	}
 	guessDomainSpec {
-		var minx,maxx;
-		minx = 0;
-		maxx = model.xypoints.last.x * 1.25;
-		^ControlSpec(minx,maxx)
+		var xs,minx,maxx,sp;
+		xs = model.points.collect(_.first);
+		minx = xs.minItem ? 0.0;
+		maxx = xs.maxItem ? 1.0;
+		^ControlSpec(minx.floor,maxx.ceil).grid.looseRange(minx,maxx).asSpec
 	}
 	spec_ { arg sp;
 		spec = sp;
 		gridLines.spec = sp;
-		this.update;
+		this.refresh;
 	}
 	setDomainSpec { arg dsp,setGridLines=true;
 		domainSpec = dsp;
 		if(setGridLines,{
 			gridLines.x.setZoom(dsp.minval,dsp.maxval);
 		});
-		this.update;
+		this.refresh;
 	}
 	setZoom { arg argFromX,argToX;
 		var toXpixels;
@@ -209,58 +258,77 @@ SplineGui : ObjectGui {
 			});
 		});
 	}
+	didResize {
+		var b;
+		b = uv.bounds.moveTo(0,0);
+		gridLines.bounds = b;
+		boundsHeight = b.height;
+		boundsWidth = b.width;
+	}
 	select { arg i;
 		selected = i;
 	}
 		
-	update {
+	refresh {
 		uv.refresh
+	}
+	update { // deprec
+		this.refresh
 	}
 	background_ { arg c; uv.background = c }
 	focusColor_ { arg c; 
 		uv.focusColor = c;
-		if(order.notNil,{
-			order.focusColor = c
-		})	
 	}
 	writeName {}
 	
-	curveGui { arg layout;
-		orderSpec = [2,8].asSpec;
-		order = Slider( layout, 17@200 )
-			.value_( orderSpec.unmap( model.order ) )
-			.action_({
-				model.order = orderSpec.map(order.value);
-				model.changed
-			});
-		order.focusColor = GUI.skin.foreground.alpha_(0.4);
-	}
 	drawControlPoints {}
 	createPoint { arg p;
 		var i;
 		i = this.detectPointIndex(p);
 		model.createPoint(p,i);
+		model.changed(\didCreatePoint,i);
 		^i
 	}
+	// deletePoint
 	detectPointIndex { arg p;
+		// find the most logical index to insert point at
+		var heights, closest;
 		if(model.points.size == 0,{ ^0 });
-		if(p[0] < model.points.first[0],{ ^0 });
-		if(p[0] > model.points.last[0],{ ^model.points.size + 1 });
-		model.points.do { arg j,i;
-			var k;
-			k = model.points.clipAt(i+1);
-			if(p[0].inclusivelyBetween(j[0],k[0]),{
-				^i+1
+
+		heights = model.points.collect({ arg mp,i;
+			var prev,next;
+			if(i > 0,{
+				prev = model.points[i - 1].asPoint;
+				next = model.points[i].asPoint;
+				[i,this.prDistanceToLine(p.asPoint,prev,next)]
+			},{
+				[0,model.points[0].asPoint.dist(p).abs]
 			})
-		};
+		}).add( [model.points.size,model.points.last.asPoint.dist(p).abs] );
+
+		closest = heights.minItem(_[1]);
+		^closest[0]
 	}
+	prDistanceToLine { arg click,prev,next;
+		var a,b,c,angle,cosc;
+		c = prev.dist(next);
+		a = click.dist(prev);
+		b = click.dist(next);
+		if(a > c or: {b > c},{
+			^inf // base is not largest, click is not over the line at all
+		});
+		cosc = (a.squared + b.squared - c.squared) / (2 * a * b);
+		angle = cosc.acos;
+		^(a * angle.sin).abs
+	}
+
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
 		var handled = false;
-		if(unicode == 127,{
+		if(unicode == 8 or: {unicode==127},{
 			if(selected.notNil,{
 				model.deletePoint(selected);
+				model.changed('didDeletePoint',selected);
 				selected = nil;
-				model.changed;
 				handled = true;
 			})
 		});
@@ -269,8 +337,34 @@ SplineGui : ObjectGui {
 }
 
 
+BSplineGui : SplineGui {
+
+	var order,orderSpec;
+
+	guiBody { arg layout,bounds;
+		super.guiBody(layout,bounds);
+		// a bit messy, its sitting on top of userview
+		this.curveGui(layout);
+	}
+	curveGui { arg layout;
+		orderSpec = [2,8].asSpec;
+		order = Slider( layout, 17@200 )
+			.value_( orderSpec.unmap( model.order ) )
+			.action_({
+				model.order = orderSpec.map(order.value);
+				model.changed
+			});
+	}
+	focusColor_ { arg c; 
+		uv.focusColor = c;
+		if(order.notNil,{
+			order.focusColor = c
+		})	
+	}	
+}
+
+
 // LoopSplineEditor
-// SplineMapperGui
 
 SplineMapperGui : SplineGui {
 	
@@ -279,23 +373,29 @@ SplineMapperGui : SplineGui {
 
 BezierSplineGui : SplineGui {
 	
+	var <>controlPointColor;
 	var selectedCP,flatpoints;
-	
+
+	initColors {
+		super.initColors;
+		controlPointColor = Color(0.55223, 0.361065, 0.1);
+	}
 	drawControlPoints {
 		model.controlPoints.do { |cps,cpi|
 			var next;
-			Pen.color = Color(0.55223880597015, 0.36106502462071, 0.20605925595901);			cps.do { arg point,i;
-				Pen.addArc(this.map(point),range,0,2pi);
+			pen.color = controlPointColor;
+			cps.do { arg point,i;
+				pen.addArc(this.map(point),pointSize,0,2pi);
 				if(selectedCP == [cpi,i],{
-					Pen.fill;
+					pen.fill;
 				},{
-					Pen.stroke;
+					pen.stroke;
 				});
 			};
 			
-			Pen.color = Color(0.55223880597015, 0.36106502462071, 0.20605925595901, 0.5);			Pen.moveTo(this.map(model.points[cpi]));
+			pen.moveTo(this.map(model.points[cpi]));
 			cps.do { arg point,i;
-				Pen.lineTo(this.map(point));
+				pen.lineTo(this.map(point));
 			};
 			if(model.isClosed,{
 				next = model.points.wrapAt(cpi+1)
@@ -303,13 +403,13 @@ BezierSplineGui : SplineGui {
 				next = model.points.at(cpi+1)
 			});
 			if(next.notNil,{
-				Pen.lineTo(this.map(next))
+				pen.lineTo(this.map(next))
 			});
-			Pen.stroke;
+			pen.stroke;
 		};
 	}
 	curveGui {}
-	update {
+	refresh {
 		// only on points changed
 		flatpoints = [];
 		model.xypoints.do { arg xy,i;
@@ -330,7 +430,7 @@ BezierSplineGui : SplineGui {
 			var p,fp,i;
 			p = x@y;
 			fp = flatpoints.detect({ arg flatpoint;
-				flatpoint[0].dist(p) <= range
+				flatpoint[0].dist(p) <= pointSize
 			});
 			if(fp.notNil,{ 
 				if(fp[1] == 'point',{
@@ -365,7 +465,7 @@ BezierSplineGui : SplineGui {
 			});
 		};
 			
-		uv.mouseMoveAction = { |uvw, x,y| 
+		uv.mouseMoveAction = { |uvw, x,y,modifiers| 
 			var p,spoint;
 			p = x@y;
 			spoint = this.unmap(p);
@@ -375,7 +475,14 @@ BezierSplineGui : SplineGui {
 			if(domainSpec.notNil,{
 				spoint[0] = domainSpec.constrain(spoint[0])
 			});
-			if( selected.notNil,{
+			if(modifiers.isCtrl,{
+				if(modifiers.isShift,{
+					spoint[0] = model.points[selected][0]
+				},{
+					spoint[1] = model.points[selected][1]
+				})
+			});			
+			if(selected.notNil,{					
 				model.points[selected] = spoint;
 				model.changed;
 			},{
@@ -393,10 +500,12 @@ BezierSplineGui : SplineGui {
 	createControlPoint { arg p;
 		var i,cps,cpi,return;
 		return = { arg i,ci;
-			model.createControlPoint(p.asArray,i,ci ?? {model.controlPoints[i].size});
+			ci = ci ?? {model.controlPoints[i].size};
+			model.createControlPoint(p.asArray,i,ci);
+			model.changed('didCreateControlPoint',ci);
 			^[i,model.controlPoints[i].size-1]
 		};
-		i = (this.detectPointIndex(p) - 1).clip(0,model.points.size-1);
+		i = (this.detectPointIndex(p) - 1).clip(0,model.controlPoints.size-1);
 		cps = model.controlPoints[i];
 		if(cps.size == 0,{
 			return.value(i)
@@ -415,13 +524,14 @@ BezierSplineGui : SplineGui {
 		return.value(i)
 	}	
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
-		var handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
+		var cpi,handled = super.keyDownAction(view, char, modifiers, unicode, keycode);
 		if(handled.not,{
-			if(unicode == 127,{
+			if(unicode == 8 or: {unicode==127},{
 				if(selectedCP.notNil,{
-					model.deleteControlPoint(selectedCP[0],selectedCP[1]);
+					cpi = selectedCP[1];
+					model.deleteControlPoint(selectedCP[0],cpi);					
 					selectedCP = nil;
-					model.changed;
+					model.changed('didDeleteControlPoint',cpi);
 					handled = true;
 				})
 			});
