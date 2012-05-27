@@ -67,7 +67,7 @@ SplineGen {
 			},{
 			index = Line.perform(rate,0.0,divisions-1,speed,1.0,0.0);
 			});
-			BufRd.kr(1,b,index,loop.binaryValue,4)
+			BufRd.perform(rate,1,b,index,loop.binaryValue,4)
 		});
 	}
 
