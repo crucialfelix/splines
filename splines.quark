@@ -1,7 +1,7 @@
 (
 	name:		"splines",
 	path:		"splines",
-	summary:	"Splines classes, BSpline, Bezier,  objects and editors",
+	summary:	"Spline classes, SplineGen/SplineOsc and VectorSplineGui",
 	author:		"felix",
-	version:	0.6
+	version:	0.7
 )
