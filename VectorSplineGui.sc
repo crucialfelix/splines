@@ -48,17 +48,27 @@ VectorSplineGui : AbstractSplineGui {
 		};
 		splineGuis[focused].refresh
 	}
-	update { arg spline;
+	update { arg spline,wot,i;
 		if(spline === model,{
 			// update all
-
-		},{
+			spline.debug("model changed");
+		},{			
 			splineGuis.do { arg sg,sgi;
 				if(sg.model === spline,{
-					model.spliceDimensions([0,sgi+1],sg.model)
-				})
+					if(#[\didCreatePoint,
+					\didCreateControlPoint,
+					\didDeletePoint,
+					\didDeleteControlPoint,
+					\didMovePoint].includes(wot),{
+						this.perform(wot,sg.model,sgi+1,i);
+						^this
+					},{
+						[spline,wot,i].debug("not handled");
+						^nil
+					})
+				});
 			}
-		})
+		});
 		// rebuild all
 		splineGuis.do { arg sg;
 			sg.model.removeDependant(this);
@@ -70,6 +80,53 @@ VectorSplineGui : AbstractSplineGui {
 			this.focused = focused;
 		}.defer
 	}
+	didMovePoint { arg xySpline,dim,i;
+		model.setPoint(i,0,xySpline.points[i][0]);
+		model.setPoint(i,dim,xySpline.points[i][1]);
+		this.updateSplineGuis;
+		this.refresh;
+	}
+	didCreatePoint { arg xySpline,dim,i; 
+		var p,interpd,a,b,x,d,xypoint;
+		
+		// for now, create linear interpolated point
+		a = model.points.clipAt(i-1);
+		b = model.points.clipAt(i+1);
+		xypoint = xySpline.points[i];
+		x = xypoint[0];
+		d = b[0] - a[0];
+		if(d == 0,{
+			interpd = a;
+		},{
+			if(d > 0,{
+				// where is xySpline x in space of a[0] b[0] ?
+				interpd = blend(a,b,x.linlin(a[0],b[0],0.0,1.0))
+			},{
+				interpd = blend(b,a,x.linlin(b[0],a[0],0.0,1.0))
+			})
+		});
+		
+		p = Array.fill(model.numDimensions,{ arg di;
+				if(di == 0,{
+					xypoint[0]
+				},{
+					if(di == dim,{
+						xypoint[1]
+					},{
+						// interpolated value at this x
+						// needs a pre-calculated spline interpolator
+						interpd[di]
+					})
+				})
+			});
+		model.createPoint(p,i);
+		this.updateSplineGuis;
+		this.refresh;
+	}
+	didCreateControlPoint { arg xySpline,dim,i; }
+	didDeletePoint { arg xySpline,dim,i; }
+	didDeleteControlPoint { arg xySpline,dim,i; }
+
 	updateSplineGuis {
 		(model.numDimensions - 1).do { arg di;
 			var spline;
