@@ -327,8 +327,8 @@ SplineGui : AbstractSplineGui {
 		if(unicode == 8 or: {unicode==127},{
 			if(selected.notNil,{
 				model.deletePoint(selected);
-				selected = nil;
 				model.changed('didDeletePoint',selected);
+				selected = nil;
 				handled = true;
 			})
 		});

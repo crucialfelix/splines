@@ -123,9 +123,19 @@ VectorSplineGui : AbstractSplineGui {
 		this.updateSplineGuis;
 		this.refresh;
 	}
-	didCreateControlPoint { arg xySpline,dim,i; }
-	didDeletePoint { arg xySpline,dim,i; }
-	didDeleteControlPoint { arg xySpline,dim,i; }
+	didCreateControlPoint { arg xySpline,dim,i; 
+		thisMethod.notYetImplemented
+	}
+	didDeletePoint { arg xySpline,dim,i; 
+		model.deletePoint(i);
+		this.updateSplineGuis;
+		this.refresh;
+	}
+	didDeleteControlPoint { arg xySpline,dim,i; 
+		model.deleteControlPoint(i);
+		this.updateSplineGuis;
+		this.refresh;
+	}
 
 	updateSplineGuis {
 		(model.numDimensions - 1).do { arg di;
