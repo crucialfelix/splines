@@ -291,17 +291,37 @@ SplineGui : AbstractSplineGui {
 	}
 	// deletePoint
 	detectPointIndex { arg p;
+		// find the most logical index to insert point at
+		var heights, closest;
 		if(model.points.size == 0,{ ^0 });
-		if(p[0] < model.points.first[0],{ ^0 });
-		if(p[0] > model.points.last[0],{ ^model.points.size + 1 });
-		model.points.do { arg j,i;
-			var k;
-			k = model.points.clipAt(i+1);
-			if(p[0].inclusivelyBetween(j[0],k[0]),{
-				^i+1
+
+		heights = model.points.collect({ arg mp,i;
+			var prev,next;
+			if(i > 0,{
+				prev = model.points[i - 1].asPoint;
+				next = model.points[i].asPoint;
+				[i,this.prDistanceToLine(p.asPoint,prev,next)]
+			},{
+				[0,model.points[0].asPoint.dist(p).abs]
 			})
-		};
+		}).add( [model.points.size,model.points.last.asPoint.dist(p).abs] );
+
+		closest = heights.minItem(_[1]);
+		^closest[0]
 	}
+	prDistanceToLine { arg click,prev,next;
+		var a,b,c,angle,cosc;
+		c = prev.dist(next);
+		a = click.dist(prev);
+		b = click.dist(next);
+		if(a > c or: {b > c},{
+			^inf // base is not largest, click is not over the line at all
+		});
+		cosc = (a.squared + b.squared - c.squared) / (2 * a * b);
+		angle = cosc.acos;
+		^(a * angle.sin).abs
+	}
+
 	keyDownAction { arg view, char, modifiers, unicode, keycode;
 		var handled = false;
 		if(unicode == 8 or: {unicode==127},{
