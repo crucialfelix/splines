@@ -20,7 +20,7 @@
 VectorSplineGui : AbstractSplineGui {
 
 	var <splineGuis,<focused=0;
-	var fade=0.25;
+	var fade=0.25,<>specs;
 
 	guiBody { arg layout,bounds;
 		this.makeSplineGuis;
@@ -139,7 +139,7 @@ VectorSplineGui : AbstractSplineGui {
 		splineGuis = { arg di;
 			var spline,sg;
 			spline = model.sliceDimensions([0,di+1]);
-			sg = spline.guiClass.new(spline).gui(userView:uv);
+			sg = spline.guiClass.new(spline).gui(nil,nil,(specs?[]).clipAt(di),userView:uv);
 			sg.color = Color.hsv(di * (model.numDimensions.reciprocal),1,0.5);
 			sg.showGrid = false;
 			sg.alpha = fade;
