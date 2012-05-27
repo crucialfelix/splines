@@ -49,7 +49,7 @@ SplineGui : AbstractSplineGui {
 	// 2D spline editor
 
 	var <spec,<domainSpec;
-	var <>density=128;
+	var <>density=256;
 	var <gridLines;
 	var selected,<>onSelect;
 	var boundsHeight,boundsWidth;
