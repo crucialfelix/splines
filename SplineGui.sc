@@ -184,8 +184,8 @@ SplineGui : AbstractSplineGui {
 			},{
 				if(clickCount == 2,{
 					selected = this.createPoint(this.unmap(p));
-					uv.refresh;
 				});
+				uv.refresh;
 			});
 			if(selected.notNil,{ onSelect.value(selected,this) });
 		};
@@ -208,7 +208,7 @@ SplineGui : AbstractSplineGui {
 					})
 				});				
 				model.points[selected] = spoint;
-				model.changed;
+				model.changed('didMovePoint',selected);
 			}; 
 		};
 		// key down action
