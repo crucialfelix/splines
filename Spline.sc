@@ -306,6 +306,7 @@ BezierSpline : LinearSpline {
 	storeArgs {
 		^[points,controlPoints].flop.flatten(1).add(isClosed)
 	}
+	// value not yet implemented
 	interpolate { arg divisions=128;
 		// along the spline path
 		// actually gives divisions * numPoints

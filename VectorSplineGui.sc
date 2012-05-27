@@ -22,7 +22,7 @@ VectorSplineGui : AbstractSplineGui {
 	var <splineGuis,<focused=0;
 	var fade=0.25,<>specs;
 
-	guiBody { arg layout,bounds;
+	guiBody { arg parent,bounds;
 		this.makeSplineGuis;
 		this.focused = focused;
 	}
