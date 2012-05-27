@@ -130,8 +130,11 @@ VectorSplineGui : AbstractSplineGui {
 	updateSplineGuis {
 		(model.numDimensions - 1).do { arg di;
 			var spline;
+			// not efficient
 			spline = model.sliceDimensions([0,di+1]);
+			splineGuis[di].model.removeDependant(this);
 			splineGuis[di].model = spline;
+			spline.addDependant(this)
 		};
 	}
 	makeSplineGuis {
