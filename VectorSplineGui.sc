@@ -49,26 +49,22 @@ VectorSplineGui : AbstractSplineGui {
 		splineGuis[focused].refresh
 	}
 	update { arg spline,wot,i;
-		if(spline === model,{
-			// update all
-			spline.debug("model changed");
-		},{			
-			splineGuis.do { arg sg,sgi;
-				if(sg.model === spline,{
-					if(#[\didCreatePoint,
-					\didCreateControlPoint,
-					\didDeletePoint,
-					\didDeleteControlPoint,
-					\didMovePoint].includes(wot),{
-						this.perform(wot,sg.model,sgi+1,i);
-						^this
-					},{
-						[spline,wot,i].debug("not handled");
-						^nil
-					})
-				});
-			}
-		});
+		//[spline,wot,i].debug("CHANGED");
+		splineGuis.do { arg sg,sgi;
+			if(sg.model === spline,{
+				if(#[\didCreatePoint,
+				\didCreateControlPoint,
+				\didDeletePoint,
+				\didDeleteControlPoint,
+				\didMovePoint].includes(wot),{
+					this.perform(wot,sg.model,sgi+1,i);
+					^this
+				},{
+					//[spline,wot,i].debug("not handled");
+					^nil
+				})
+			});
+		};
 		// rebuild all
 		splineGuis.do { arg sg;
 			sg.model.removeDependant(this);
