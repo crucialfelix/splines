@@ -21,8 +21,12 @@ VectorSplineGui : AbstractSplineGui {
 
 	var <splineGuis,<focused=0;
 	var fade=0.25,<>specs;
+	var domainSpec,fromX,toX;
 
 	guiBody { arg parent,bounds;
+		domainSpec = [0.0,model.points.maxValue(_.at(0))].asSpec;
+		fromX = domainSpec.minval;
+		toX = domainSpec.maxval;
 		this.makeSplineGuis;
 		this.focused = focused;
 	}
@@ -135,11 +139,14 @@ VectorSplineGui : AbstractSplineGui {
 
 	updateSplineGuis {
 		(model.numDimensions - 1).do { arg di;
-			var spline;
+			var spline,sg;
 			// not efficient
 			spline = model.sliceDimensions([0,di+1]);
-			splineGuis[di].model.removeDependant(this);
-			splineGuis[di].model = spline;
+			sg = splineGuis[di];
+			sg.model.removeDependant(this);
+			sg.model = spline;
+			sg.setDomainSpec(domainSpec);
+			sg.setZoom(fromX,toX);
 			spline.addDependant(this)
 		};
 	}
@@ -149,12 +156,29 @@ VectorSplineGui : AbstractSplineGui {
 			var spline,sg;
 			spline = model.sliceDimensions([0,di+1]);
 			sg = spline.guiClass.new(spline).gui(nil,nil,(specs?[]).clipAt(di),userView:uv);
+			sg.setDomainSpec(domainSpec);
+			sg.setZoom(fromX,toX);
 			sg.color = Color.hsv(di * (model.numDimensions.reciprocal),1,0.5);
 			sg.showGrid = false;
 			sg.alpha = fade;
 			spline.addDependant(this);
 			sg
 		} ! (model.numDimensions - 1);
+	}
+	setDomainSpec { arg dsp,setGridLines=true;
+		domainSpec = dsp;
+		splineGuis.do { arg sg;
+			sg.setDomainSpec(domainSpec);
+		};
+	}
+	setZoom { arg argFromX,argToX;
+		var toXpixels;
+		fromX = argFromX.asFloat;
+		toX = argToX.asFloat;
+		domainSpec = ControlSpec(domainSpec.minval,max(toX,domainSpec.maxval));
+		splineGuis.do { arg sg;
+			sg.setZoom(fromX,toX);
+		};
 	}	
 	viewDidClose {
 		super.viewDidClose;
