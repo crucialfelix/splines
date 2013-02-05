@@ -1,17 +1,17 @@
 CLASS:: VectorSplineGui
 summary:: Editor for viewing splines that consist of vectorized data at positions along the x domain
-categories:: Splines, Gui
+categories:: Splines>GuiClasses
 related:: Classes/LinearSpline, Classes/SplineGui
 
 DESCRIPTION::
 	Vectorizing data is a common machine learning technique
 	where many parameters are stored as dimensions of a vector.
 
-	A vector-spline is my own neologism meaning a (time) series of such vectors where the first dimension is interpreted as x and the other dimensions are the data. 
+	A vector-spline is my own neologism meaning a (time) series of such vectors where the first dimension is interpreted as x and the other dimensions are the data.
 
 	Most commonly the first dimension (x) is time, but it can also be an ordered series of states or presets.  The distance along x could refer to anything.
 
-	The spline can be used to interpolate between those states or to sequence changes between states.  
+	The spline can be used to interpolate between those states or to sequence changes between states.
 
 	Note that the distance along the spline is u, but this distance varies depending on the values in each dimension of the point.  So u cannot be time as it would vary as you varied the data in the point.  It can be used for similarity, though there are much better ways to compare vectorized data.
 
@@ -88,7 +88,7 @@ Refresh the view
 returns:: this
 
 METHOD:: update
-The implementatation creates multiple splines with multiple spline guis and uses the dependency system to watch for messages sent by .changed .  The currently focused sub spline for a single dimension will be .changed by its gui, and that causes update message to be sent to dependents. The VectorSplineGui is a dependant of each of theh sub-splines.  
+The implementatation creates multiple splines with multiple spline guis and uses the dependency system to watch for messages sent by .changed .  The currently focused sub spline for a single dimension will be .changed by its gui, and that causes update message to be sent to dependents. The VectorSplineGui is a dependant of each of theh sub-splines.
 
 Changes to that spline's x/y are then passed on to the model (a multi-dimensional spline).
 
@@ -223,7 +223,7 @@ Note about SplineGuis: holding down shift-control while move will constrict move
 
 Double click to create a new point.
 
-As with all ObjectGui subclasses you can set a different model to the view and it will update itself completely. 
+As with all ObjectGui subclasses you can set a different model to the view and it will update itself completely.
 
 code::
 (

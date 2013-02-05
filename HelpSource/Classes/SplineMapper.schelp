@@ -1,7 +1,7 @@
 CLASS:: SplineMapper
 summary:: Use a spline as a mapping function.
 categories:: Splines
-related:: Classes/LinearSpline
+related:: Classes/LinearSpline, Classes/Shaper
 
 DESCRIPTION::
 Interprets a spline as a mapping function for wave shaping or transfer functions.
@@ -36,7 +36,7 @@ INSTANCEMETHODS::
 
 
 METHOD:: kr
-Given a control input X, maps that with the spline as transfer function. 
+Given a control input X, maps that with the spline as transfer function.
 
 argument:: x
 control rate input
@@ -109,7 +109,7 @@ b.gui(nil,500@500,\bipolar,\bipolar);
  )
 
 /*
-By passing spec and domainSpec to the gui 
+By passing spec and domainSpec to the gui
 it will size the display to precisely the range
 and limit the points to movement within the range.
 */
@@ -136,14 +136,14 @@ b.gui(nil,500@500,\bipolar,\bipolar);
  )
 
 
-::
+
 
 Notes
 
-Make a SplineMapperEditor that limits visibile and points to specs. 
+Make a SplineMapperEditor that limits visibile and points to specs.
 limits drawing to clip range
 highlights in red any reverses in domain
 highlights in yellow any reverses in level
 normalize button
-# compile string::
+
 
