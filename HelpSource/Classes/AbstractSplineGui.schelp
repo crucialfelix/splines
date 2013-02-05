@@ -1,6 +1,6 @@
 CLASS:: AbstractSplineGui
 summary:: Parent class for SplineGui
-categories:: Splines, Gui
+categories:: Splines>GuiClasses
 related:: Classes/SplineGui, Classes/VectorSplineGui
 
 DESCRIPTION::

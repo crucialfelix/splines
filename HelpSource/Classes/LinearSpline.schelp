@@ -1,6 +1,6 @@
 CLASS:: LinearSpline
-summary:: A simple linearly interpolated spline passing through a series of points. 
-categories:: Splines
+summary:: A simple linearly interpolated spline passing through a series of points.
+categories:: Splines, Envelopes>Splines
 related:: Classes/BezierSpline, Classes/BSpline
 
 DESCRIPTION::
@@ -98,7 +98,7 @@ argument:: p
 The point, either as a Point object or as an array.
 
 argument:: i
-The point index to insert the point at. Note that the subsequent points are moved along the spline's point array but their values are not changed. 
+The point index to insert the point at. Note that the subsequent points are moved along the spline's point array but their values are not changed.
 
 METHOD:: deletePoint
 delete a point
@@ -160,7 +160,7 @@ max value
 returns:: the normalization is in place, returns the same Spline object
 
 METHOD:: ++
-concatenate another LinearSpline 
+concatenate another LinearSpline
 
 argument:: thou
 the other spline

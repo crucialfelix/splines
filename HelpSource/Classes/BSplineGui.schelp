@@ -1,6 +1,6 @@
 CLASS:: BSplineGui
 summary:: display and interface for a BSpline
-categories:: Splines, Gui
+categories:: Splines>GuiClasses
 related:: Classes/BSpline, Classes/SplineGui.
 
 DESCRIPTION::

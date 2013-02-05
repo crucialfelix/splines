@@ -1,6 +1,6 @@
 CLASS:: SplineGui
 summary:: 2 dimensional spline GUI and editor
-categories:: Splines, Gui
+categories:: Splines>GuiClasses
 related:: Classes/LinearSpline, Classes/BSplineGui, Classes/BezierSplineGui, Classes/VectorSplineGui
 
 DESCRIPTION::
@@ -10,7 +10,7 @@ Splines with more dimension than 2 will display only the first 2 dimensions. See
 
 A spline gui may be placed on a window or composite view just like any other gui, but it may also be placed onto a link::Classes/UserView:: so it can be integrated with other more complex UserView based applications.
 
-The interpolation is currently done during the drawFunc which isn't the most efficient way to do it and the interpolation method shows some errors around sharp corners. 
+The interpolation is currently done during the drawFunc which isn't the most efficient way to do it and the interpolation method shows some errors around sharp corners.
 
 A SplineInterpolator class is planned that will cache results and can implement a more accurate fit to the data.  This class will also be useful for using interpolations in sequencing and for updating server side buffers.
 
@@ -23,7 +23,7 @@ l.gui
 )
 ::
 
-Double click to create a new point. Click a point to select it, hit delete to delete it.  
+Double click to create a new point. Click a point to select it, hit delete to delete it.
 
 Hold down shift-control while moving a point to limit movements to the vertical axis.  Hold down control to limit it to the horizontal.
 

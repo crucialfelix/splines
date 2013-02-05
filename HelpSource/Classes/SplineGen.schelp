@@ -15,7 +15,7 @@ CLASSMETHODS::
 METHOD:: new
 
 argument:: spline
-any Spline subclass.  
+any Spline subclass.
 
 argument:: dimension
 The dimension that represents time. Usually 0
@@ -133,7 +133,7 @@ Returns an array of kr following each dimension. Returns as many dimensions as y
 Time is the path along the spine of the spline.
 The total tangent length along spline could be summed to figure out the length of time needed for one oscillation, but that would only be calculatable if it is 2 dimensions.
 So just crank the speed up until you like it.
-		
+
 argument:: speed
 float.  how fast. range ?  that depends
 
@@ -141,7 +141,7 @@ argument:: divisions
 Total number of points in the interpolation
 
 argument:: rate
-'kr' or 'ar'  see also ::Classes/SplineOsc::
+'kr' or 'ar' see also link::Classes/SplineOsc::
 
 returns:: control or audio rate BufRd
 
@@ -167,10 +167,10 @@ b.interpolate(32).flop.plot
 EXAMPLES::
 
 code::
-( 
-//Its not the spline that loops (that would be a loop in 2 dimensional space) but the SplineGen that is set to loop.  
+(
+//Its not the spline that loops (that would be a loop in 2 dimensional space) but the SplineGen that is set to loop.
 
-// the spline does NOT loop, 
+// the spline does NOT loop,
 b = BSpline( Array.fill(16,{ arg i; [ i * 0.25,1.0.rand ] }), 3.0,false );
 
 b.gui(nil,1200@300);

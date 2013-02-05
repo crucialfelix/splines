@@ -1,6 +1,6 @@
 CLASS:: BezierSpline
 summary:: A Bézier spline is a series of Bézier curves joined end to end where the last point of one curve coincides with the starting point of the next curve.
-categories:: Splines
+categories:: Splines, Envelopes>Splines
 related:: Classes/LinearSpline
 
 DESCRIPTION::
@@ -20,17 +20,17 @@ list::
 code::
 (
 b = BezierSpline(
-	[ 0, 0 ], 
-		[  ], 
-	[ 1, 1 ], 
-		[ [ 1.56875, 0.3125 ] ], 
-	[ 2, 2 ], 
-		[ [ 2.23125, 0.54166666666667 ], [ 2.78125, 0.6875 ] ], 
-	[ 3, 3 ], 
-		[ [ 3.0375, 4.6875 ], [ 3.475, 1.3958333333333 ], [ 3.4875, 5.125 ] ], 
-	[ 4, 4 ], 
-		[ [ 4.2875, 1.875 ], [ 4.76875, 1.0208333333333 ], [ 4.38125, 4.3333333333333 ], [ 4.69375, 5.5416666666667 ] ], 
-	[ 5, 5 ], 
+	[ 0, 0 ],
+		[  ],
+	[ 1, 1 ],
+		[ [ 1.56875, 0.3125 ] ],
+	[ 2, 2 ],
+		[ [ 2.23125, 0.54166666666667 ], [ 2.78125, 0.6875 ] ],
+	[ 3, 3 ],
+		[ [ 3.0375, 4.6875 ], [ 3.475, 1.3958333333333 ], [ 3.4875, 5.125 ] ],
+	[ 4, 4 ],
+		[ [ 4.2875, 1.875 ], [ 4.76875, 1.0208333333333 ], [ 4.38125, 4.3333333333333 ], [ 4.69375, 5.5416666666667 ] ],
+	[ 5, 5 ],
 	false);
 
 b.gui(nil,1000@300);
@@ -56,7 +56,7 @@ BezierSpline(
 	...
 	pointN,
 	  controlPointsN,
-	 
+
 	isClosed
 )
 ::
@@ -147,7 +147,7 @@ answers if the BezierSpline is only a single segment with no control points and 
 returns:: boolean
 
 METHOD:: ++
-concatenate another BezierSpline 
+concatenate another BezierSpline
 
 argument:: thou
 the other spline
@@ -211,7 +211,7 @@ b = BezierSpline(
 		  [],
 		false
 	);
-	
+
 b.gui
 )
 ::
