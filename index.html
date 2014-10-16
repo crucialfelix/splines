@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Splines by crucialfelix</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Splines</h1>
+        <p>Spline classes for SuperCollider</p>
+
+        <p class="view"><a href="https://github.com/crucialfelix/splines">View the Project on GitHub <small>crucialfelix/splines</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/crucialfelix/splines/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/crucialfelix/splines/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/crucialfelix/splines">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="splines" class="anchor" href="#splines"><span class="octicon octicon-link"></span></a>Splines</h1>
+
+<p>Splines for the <a href="http://github.com/supercollider/supercollider">SuperCollider</a> music programming environment.</p>
+
+<ul>
+<li>BezierSpline
+
+<ul>
+<li>BezierSplines may have an unlimited number of control points.</li>
+</ul>
+</li>
+<li>LinearSpline</li>
+<li>BSpline</li>
+</ul>
+
+<p>These are representations of the mathematical defintion of splines (a collection of Points) with supporting functions for performing the interpolations.  Unlike Envelopes they are not limited to left-to-right time representations.</p>
+
+<h2>
+<a name="uses" class="anchor" href="#uses"><span class="octicon octicon-link"></span></a>Uses</h2>
+
+<p>Splines can be used as controllers for parameter automation or sequencing. They may be multi-dimensional and be used to control many parameters with a unified time domain.  States and presets can be stored in multi-dimensional points and interpolated between or sequenced in time.</p>
+
+<ul>
+<li>
+<p>SplineGen </p>
+
+<ul>
+<li>kr     - like EnvGen but for Splines</li>
+<li>ar     - also possible to loop it and run it at audio frequencies</li>
+<li>readKr - use a position input to freely modulate along the X axis</li>
+<li>xyKr   - travels along the spine and emits modulation controls for each dimension</li>
+</ul>
+</li>
+<li><p>SplineMapper - use a spline as a transfer function or waveshaper. kr/ar</p></li>
+<li><p>SplineOsc - play a spline as an oscillator. kr/ar</p></li>
+</ul>
+
+<p>Mx also includes SplineFr that plays a Spline at a frame rate on the client and sends controls to the server.  This class might be moved into splines.</p>
+
+<h2>
+<a name="gui" class="anchor" href="#gui"><span class="octicon octicon-link"></span></a>GUI</h2>
+
+<p>Spline GUIs may be placed on any window or view and even on another UserView. They can be zoomed in the X dimension for time-domain splines (for instance automation curves).</p>
+
+<p>Double click to create a new point. Click a point to select it, hit delete to delete it.  </p>
+
+<p>Hold down shift-control while moving a point to limit movements to the vertical axis.  Hold down control to limit it to the horizontal.</p>
+
+<p>Bezier Splines have control points — hold down ALT while clicking to create or edit those.</p>
+
+<pre><code>l = LinearSpline({ { 4.0.rand } ! 2 } ! 9);
+l.gui
+
+
+l = LinearSpline({ { 4.0.rand } ! 6 } ! 12);
+v = VectorSplineGui(l).gui(nil,1000@1000);
+
+
+// used like a long envelope
+b = LinearSpline( Array.fill(60,{ arg i; [ i,1.0.rand ] }) );
+b.gui(nil,1200@300);
+{
+    PinkNoise.ar * SplineGen(b).kr(doneAction:2)
+}.play
+
+// travel along the spine of the spline outputting an x and a y control
+{
+    # f , w = SplineGen(b,0,loop:true).xyKr(MouseY.kr(0.1,20),32);
+    Pulse.ar(f.clip(40,500),w.clip(0.0,1.0),0.4).dup
+}.play
+</code></pre>
+
+<ul>
+<li>VectorSplineGui - for editing multi-dimensional splines that consist of a series of vectors — each point is a vector of parameters.  It interperets a spline as an ordered series of vectors.</li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/crucialfelix">crucialfelix</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
